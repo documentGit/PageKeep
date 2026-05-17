@@ -593,6 +593,26 @@
         return;
       }
       
+      // 入力欄に残っているタグを自動追加
+      const tagNameInput = body.querySelector('#pk-tag-name');
+      const pendingTagName = tagNameInput.value.trim();
+      if (pendingTagName) {
+        const prefix = body.querySelector('#pk-prefix').value;
+        const fullTag = prefix ? `${prefix}/${pendingTagName}` : pendingTagName;
+        
+        // 表記ゆれチェック（既存タグと同じ正規化形なら、既存タグを使う）
+        const similar = findSimilarTags(fullTag, allTags.map(t => t.name));
+        if (similar.length > 0) {
+          // 既存タグがある場合、それを使う（重複追加は防ぐ）
+          if (!selectedTags.includes(similar[0])) {
+            selectedTags.push(similar[0]);
+          }
+        } else if (!selectedTags.includes(fullTag)) {
+          selectedTags.push(fullTag);
+        }
+        tagNameInput.value = '';
+      }
+      
       const btn = body.querySelector('.pk-submit');
       btn.disabled = true;
       btn.textContent = '保存中...';
