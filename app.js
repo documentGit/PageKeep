@@ -1,5 +1,5 @@
 // ============================================
-// PageKeep - Client Script (v2)
+// PageKeep - Client Script (v2.1)
 // ============================================
 (async function() {
   'use strict';
@@ -32,8 +32,8 @@
     return;
   }
   
-  const existing = document.getElementById('__pagekeep_overlay__');
-  if (existing) existing.remove();
+  const existingOverlay = document.getElementById('__pagekeep_overlay__');
+  if (existingOverlay) existingOverlay.remove();
   
   // ============================================
   // ステータス・フラグ定義
@@ -200,15 +200,21 @@
           display: flex; gap: 6px;
         }
         #__pagekeep_overlay__ .pk-tag-input-row select {
-          flex: 0 0 35%;
+          flex: 0 0 130px;
+          min-width: 0;
+          padding: 10px 4px;
         }
         #__pagekeep_overlay__ .pk-tag-input-row input {
           flex: 1;
+          min-width: 0;
         }
         #__pagekeep_overlay__ .pk-tag-add-btn {
-          flex: 0 0 auto; padding: 0 14px;
-          border: 1px solid #0066cc; background: #0066cc; color: #fff;
-          border-radius: 6px; cursor: pointer; font-size: 18px;
+          flex: 0 0 auto; padding: 0 12px;
+          border: 1px solid #ccc; background: #f0f0f0; color: #666;
+          border-radius: 6px; cursor: pointer; font-size: 16px;
+        }
+        #__pagekeep_overlay__ .pk-tag-add-btn:hover {
+          background: #e0e0e0;
         }
         #__pagekeep_overlay__ .pk-tag-area {
           margin-top: 8px;
@@ -307,6 +313,12 @@
           #__pagekeep_overlay__ .pk-checkbox-label {
             background: #1a1a1a; color: #e0e0e0; border-color: #444;
           }
+          #__pagekeep_overlay__ .pk-tag-add-btn {
+            background: #333; color: #ccc; border-color: #555;
+          }
+          #__pagekeep_overlay__ .pk-tag-add-btn:hover {
+            background: #444;
+          }
         }
       </style>
       <div class="pk-modal">
@@ -389,7 +401,7 @@
           <option value="">プレフィックスなし</option>
           ${prefixOptions}
         </select>
-        <input type="text" id="pk-tag-name" placeholder="タグ名 or 検索">
+        <input type="text" id="pk-tag-name" placeholder="タグを入力（保存時に自動追加）">
         <button class="pk-tag-add-btn" id="pk-tag-add">+</button>
       </div>
       <div class="pk-warning" id="pk-tag-warning" style="display:none;"></div>
@@ -603,7 +615,6 @@
         // 表記ゆれチェック（既存タグと同じ正規化形なら、既存タグを使う）
         const similar = findSimilarTags(fullTag, allTags.map(t => t.name));
         if (similar.length > 0) {
-          // 既存タグがある場合、それを使う（重複追加は防ぐ）
           if (!selectedTags.includes(similar[0])) {
             selectedTags.push(similar[0]);
           }
@@ -638,6 +649,15 @@
           </div>
         `);
         setTimeout(() => overlay.remove(), 2000);
+      } else if (result.duplicate) {
+        const banner = body.querySelector('.pk-status-banner');
+        banner.className = 'pk-status-banner existing';
+        setHTML(banner, 
+          `⚠ このページは既に保存されています。<br>` +
+          (existing.docUrl ? `<a href="${existing.docUrl}" target="_blank" style="color:#0066cc;">📄 保存済みのDocを開く</a>` : '')
+        );
+        btn.disabled = true;
+        btn.textContent = '保存済み';
       } else {
         const banner = body.querySelector('.pk-status-banner');
         banner.className = 'pk-status-banner error';
