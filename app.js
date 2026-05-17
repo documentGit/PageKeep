@@ -6,6 +6,26 @@
   
   const REQUIRED_GAS_VERSION = 1;
   
+  // Trusted Types 対応：innerHTMLを安全に設定するためのヘルパー
+  let trustedHTMLPolicy = null;
+  if (window.trustedTypes && window.trustedTypes.createPolicy) {
+    try {
+      trustedHTMLPolicy = window.trustedTypes.createPolicy('pagekeep-html-' + Date.now(), {
+        createHTML: (s) => s
+      });
+    } catch (e) {
+      // ポリシー作成失敗時は素のinnerHTMLを使う
+    }
+  }
+  
+  function setHTML(element, html) {
+    if (trustedHTMLPolicy) {
+      element.innerHTML = trustedHTMLPolicy.createHTML(html);
+    } else {
+      element.innerHTML = html;
+    }
+  }
+  
   // ブックマークレットが window に注入した値を読む
   const gasUrl = window.__PAGEKEEP_GAS_URL__;
   const secret = window.__PAGEKEEP_SECRET__;
@@ -30,7 +50,6 @@
       return url;
     }
     
-    // 追跡パラメータ除去
     const trackingParams = [
       'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
       'fbclid', 'gclid', 'msclkid', 'mc_cid', 'mc_eid',
@@ -38,18 +57,13 @@
     ];
     trackingParams.forEach(p => u.searchParams.delete(p));
     
-    // フラグメント除去
     u.hash = '';
-    
-    // ホスト小文字化
     u.hostname = u.hostname.toLowerCase();
     
-    // 末尾スラッシュ統一
     if (u.pathname.length > 1 && u.pathname.endsWith('/')) {
       u.pathname = u.pathname.slice(0, -1);
     }
     
-    // YouTube正規化
     if (/(?:^|\.)youtube\.com$|^youtu\.be$/.test(u.hostname)) {
       let videoId = null;
       if (u.hostname === 'youtu.be') {
@@ -87,14 +101,12 @@
     const url = location.href;
     const normalizedUrl = normalizeUrl(url);
     
-    // タイトル
     const title = (
       document.querySelector('meta[property="og:title"]')?.content ||
       document.title ||
       ''
     ).trim();
     
-    // 抜粋（選択テキスト優先、なければOGP description）
     let excerpt = window.getSelection().toString().trim();
     if (!excerpt) {
       excerpt = (
@@ -113,7 +125,6 @@
   async function callGas(action, payload) {
     const res = await fetch(gasUrl, {
       method: 'POST',
-      // GASはCORSプリフライトを避けるためtext/plainで送る
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action, secret, ...payload }),
     });
@@ -126,7 +137,7 @@
   function buildOverlay() {
     const overlay = document.createElement('div');
     overlay.id = '__pagekeep_overlay__';
-    overlay.innerHTML = `
+    setHTML(overlay, `
       <style>
         #__pagekeep_overlay__ {
           position: fixed; inset: 0;
@@ -229,7 +240,7 @@
         </div>
         <div class="pk-body">読み込み中...</div>
       </div>
-    `;
+    `);
     document.body.appendChild(overlay);
     overlay.querySelector('.pk-close').onclick = () => overlay.remove();
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
@@ -243,7 +254,7 @@
       ? `⚠ このページは既に保存済みです（${existing.updateCount + 1}回目の保存）`
       : '✓ 新規ページとして保存します';
     
-    body.innerHTML = `
+    setHTML(body, `
       <div class="pk-status ${statusClass}">${statusText}</div>
       
       <label>タイトル</label>
@@ -262,7 +273,7 @@
         <button class="pk-btn pk-cancel">キャンセル</button>
         <button class="pk-btn pk-btn-primary pk-submit">保存</button>
       </div>
-    `;
+    `);
     
     body.querySelector('.pk-cancel').onclick = () => overlay.remove();
     body.querySelector('.pk-submit').onclick = async () => {
@@ -281,16 +292,17 @@
       });
       
       if (result.success) {
-        body.innerHTML = `
+        setHTML(body, `
           <div class="pk-success">
             <p>✅ 保存しました</p>
             <p><a href="${result.docUrl}" target="_blank">📄 Docを開く</a></p>
           </div>
-        `;
+        `);
         setTimeout(() => overlay.remove(), 2000);
       } else {
-        body.querySelector('.pk-status').className = 'pk-status error';
-        body.querySelector('.pk-status').textContent = '❌ エラー: ' + (result.error || 'unknown');
+        const statusEl = body.querySelector('.pk-status');
+        statusEl.className = 'pk-status error';
+        statusEl.textContent = '❌ エラー: ' + (result.error || 'unknown');
         btn.disabled = false;
         btn.textContent = '保存';
       }
@@ -311,19 +323,17 @@
   const pageData = collectPageData();
   
   try {
-    // バージョン確認
     const versionRes = await callGas('version', {});
     if (versionRes.version < REQUIRED_GAS_VERSION) {
-      overlay.querySelector('.pk-body').innerHTML = `
+      setHTML(overlay.querySelector('.pk-body'), `
         <div class="pk-status error">
           GASの更新が必要です（現在: v${versionRes.version} / 必要: v${REQUIRED_GAS_VERSION}）
         </div>
         <p>guide.htmlで最新版のGASコードを取得してください。</p>
-      `;
+      `);
       return;
     }
     
-    // 既存チェック
     const existing = await callGas('check', {
       url: pageData.url,
       normalizedUrl: pageData.normalizedUrl,
@@ -331,11 +341,11 @@
     
     renderForm(overlay, pageData, existing);
   } catch (err) {
-    overlay.querySelector('.pk-body').innerHTML = `
+    setHTML(overlay.querySelector('.pk-body'), `
       <div class="pk-status error">
         通信エラー: ${err.message}<br>
         GASのURLとシークレットを確認してください。
       </div>
-    `;
+    `);
   }
 })();
