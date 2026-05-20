@@ -1,11 +1,11 @@
 // ============================================
-// PageKeep - Client Script (v4)
-// 保存・更新・閲覧・削除すべて統合
+// PageKeep - Client Script (v5)
+// OGP画像・タグ色対応
 // ============================================
 (async function() {
   'use strict';
   
-  const REQUIRED_GAS_VERSION = 5;
+  const REQUIRED_GAS_VERSION = 6;
   
   // Trusted Types
   let trustedHTMLPolicy = null;
@@ -60,7 +60,7 @@
     return f ? f.label : '';
   }
   
-  // 共有データ（メイン処理で取得後、各画面に渡す）
+  // 共有データ
   const state = {
     pageData: null,
     existing: null,
@@ -122,24 +122,22 @@
         document.querySelector('meta[name="description"]')?.content || ''
       ).trim();
     }
-    return { url, normalizedUrl, title, excerpt };
+    const imageUrl = collectImageUrl();
+    return { url, normalizedUrl, title, excerpt, imageUrl };
   }
   
   function collectTitle() {
     const isYouTube = /(?:^|\.)youtube\.com$|^youtu\.be$/.test(location.hostname);
     
-    // YouTube専用：DOM から動画タイトルを取得
     if (isYouTube) {
       const ytTitle = pickYouTubeTitle();
       if (ytTitle) return ytTitle;
     }
     
-    // 通常：og:title → document.title
     const ogTitle = document.querySelector('meta[property="og:title"]')?.content?.trim();
     if (ogTitle && ogTitle !== 'YouTube') return ogTitle;
     
     const docTitle = (document.title || '').trim();
-    // 「タイトル - YouTube」形式から動画タイトル部分を抽出
     if (docTitle && docTitle !== 'YouTube') {
       return docTitle.replace(/\s*-\s*YouTube\s*$/, '');
     }
@@ -148,7 +146,6 @@
   }
   
   function pickYouTubeTitle() {
-    // 複数のセレクタで試す（YouTubeのUI変更に対応）
     const selectors = [
       'ytd-watch-metadata h1 yt-formatted-string',
       'ytd-watch-metadata h1',
@@ -168,6 +165,53 @@
     }
     
     return null;
+  }
+  
+  function collectImageUrl() {
+    // YouTube: 動画IDからサムネ生成
+    const isYouTube = /(?:^|\.)youtube\.com$|^youtu\.be$/.test(location.hostname);
+    if (isYouTube) {
+      const videoId = getYouTubeVideoId();
+      if (videoId) {
+        return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+      }
+    }
+    
+    // 通常: og:image
+    const ogImage = document.querySelector('meta[property="og:image"]')?.content;
+    if (ogImage) {
+      try {
+        return new URL(ogImage, location.href).href;
+      } catch {
+        return ogImage;
+      }
+    }
+    
+    // フォールバック: twitter:image
+    const twImage = document.querySelector('meta[name="twitter:image"]')?.content;
+    if (twImage) {
+      try {
+        return new URL(twImage, location.href).href;
+      } catch {
+        return twImage;
+      }
+    }
+    
+    return '';
+  }
+  
+  function getYouTubeVideoId() {
+    try {
+      const u = new URL(location.href);
+      if (u.hostname === 'youtu.be') return u.pathname.slice(1);
+      const embedMatch = u.pathname.match(/^\/embed\/([^\/]+)/);
+      if (embedMatch) return embedMatch[1];
+      const shortsMatch = u.pathname.match(/^\/shorts\/([^\/]+)/);
+      if (shortsMatch) return shortsMatch[1];
+      return u.searchParams.get('v');
+    } catch {
+      return null;
+    }
   }
   
   async function callGas(action, payload) {
@@ -212,6 +256,44 @@
   function truncate(str, n) {
     if (!str) return '';
     return str.length > n ? str.slice(0, n) + '…' : str;
+  }
+  
+  // ============================================
+  // タグの色
+  // ============================================
+  function getPrefixFromTag(tagName) {
+    const parts = tagName.split('/');
+    return parts.length > 1 ? parts[0] : '';
+  }
+  
+  function autoColorForPrefix(prefix) {
+    if (!prefix) return null;
+    let hash = 0;
+    for (let i = 0; i < prefix.length; i++) {
+      hash = ((hash << 5) - hash) + prefix.charCodeAt(i);
+      hash = hash & hash;
+    }
+    const hue = Math.abs(hash) % 360;
+    return { bg: `hsl(${hue}, 70%, 88%)`, fg: `hsl(${hue}, 50%, 25%)` };
+  }
+  
+  function getTagColor(tagName, prefixes) {
+    const prefix = getPrefixFromTag(tagName);
+    if (!prefix) return null;
+    
+    const p = prefixes.find(x => x.name === prefix);
+    if (p && p.color) {
+      return { bg: p.color, fg: '#1a1a1a' };
+    }
+    
+    return autoColorForPrefix(prefix);
+  }
+  
+  function tagChipStyle(tagName, prefixes, selected) {
+    if (selected) return '';
+    const c = getTagColor(tagName, prefixes);
+    if (!c) return '';
+    return `background:${c.bg};color:${c.fg};`;
   }
   
   // ============================================
@@ -325,7 +407,7 @@
           border: 1px solid transparent;
         }
         #__pagekeep_overlay__ .pk-tag-chip.selected {
-          background: #0066cc; color: #fff;
+          background: #0066cc !important; color: #fff !important;
         }
         #__pagekeep_overlay__ .pk-tag-chip:hover {
           border-color: #0066cc;
@@ -405,12 +487,8 @@
         }
         
         /* === 閲覧画面 === */
-        #__pagekeep_overlay__ .pk-list-search {
-          margin-bottom: 12px;
-        }
-        #__pagekeep_overlay__ .pk-list-search input {
-          padding: 10px 12px;
-        }
+        #__pagekeep_overlay__ .pk-list-search { margin-bottom: 12px; }
+        #__pagekeep_overlay__ .pk-list-search input { padding: 10px 12px; }
         #__pagekeep_overlay__ .pk-filter-row {
           display: flex; flex-wrap: wrap; gap: 6px;
           margin-bottom: 12px;
@@ -440,6 +518,19 @@
         }
         #__pagekeep_overlay__ .pk-card:hover {
           border-color: #0066cc;
+        }
+        #__pagekeep_overlay__ .pk-card.has-image {
+          display: flex; gap: 12px;
+        }
+        #__pagekeep_overlay__ .pk-card-image {
+          flex: 0 0 100px;
+          width: 100px; height: 75px;
+          object-fit: cover;
+          border-radius: 4px;
+          background: #f0f0f0;
+        }
+        #__pagekeep_overlay__ .pk-card-content {
+          flex: 1; min-width: 0;
         }
         #__pagekeep_overlay__ .pk-card-title {
           font-size: 15px; font-weight: 600;
@@ -568,9 +659,10 @@
     function renderSelected() {
       const el = body.querySelector('#pk-selected');
       if (!el) return;
-      setHTML(el, selectedTags.map((t, i) => 
-        `<span class="pk-tag-chip selected" data-idx="${i}">${escapeAttr(t)}<span class="pk-remove">×</span></span>`
-      ).join(''));
+      setHTML(el, selectedTags.map((t, i) => {
+        const style = tagChipStyle(t, state.prefixes, false);
+        return `<span class="pk-tag-chip" style="${style}" data-idx="${i}">${escapeAttr(t)}<span class="pk-remove">×</span></span>`;
+      }).join(''));
       el.querySelectorAll('.pk-tag-chip').forEach(chip => {
         chip.onclick = () => {
           selectedTags.splice(parseInt(chip.dataset.idx), 1);
@@ -632,14 +724,23 @@
     function renderTagSuggestions(recent, popular) {
       const el = body.querySelector('#pk-tag-suggestions');
       if (!el) return;
+      const recentHtml = recent.map(t => {
+        const style = tagChipStyle(t.name, state.prefixes, false);
+        return `<span class="pk-tag-chip" style="${style}" data-tag="${escapeAttr(t.name)}">${escapeAttr(t.name)}</span>`;
+      }).join('');
+      const popularHtml = popular.map(t => {
+        const style = tagChipStyle(t.name, state.prefixes, false);
+        return `<span class="pk-tag-chip" style="${style}" data-tag="${escapeAttr(t.name)}">${escapeAttr(t.name)} (${t.count})</span>`;
+      }).join('');
+      
       setHTML(el, `
         ${recent.length > 0 ? `
           <div class="pk-tag-group-title">最近使った</div>
-          <div>${recent.map(t => `<span class="pk-tag-chip" data-tag="${escapeAttr(t.name)}">${escapeAttr(t.name)}</span>`).join('')}</div>
+          <div>${recentHtml}</div>
         ` : ''}
         ${popular.length > 0 ? `
           <div class="pk-tag-group-title">よく使う</div>
-          <div>${popular.map(t => `<span class="pk-tag-chip" data-tag="${escapeAttr(t.name)}">${escapeAttr(t.name)} (${t.count})</span>`).join('')}</div>
+          <div>${popularHtml}</div>
         ` : ''}
       `);
       attachSuggestionClicks();
@@ -653,9 +754,13 @@
         setHTML(el, `<div class="pk-tag-group-title">該当タグなし（新規作成されます）</div>`);
         return;
       }
+      const html = filtered.map(t => {
+        const style = tagChipStyle(t.name, state.prefixes, false);
+        return `<span class="pk-tag-chip" style="${style}" data-tag="${escapeAttr(t.name)}">${escapeAttr(t.name)} (${t.count})</span>`;
+      }).join('');
       setHTML(el, `
         <div class="pk-tag-group-title">検索結果</div>
-        <div>${filtered.map(t => `<span class="pk-tag-chip" data-tag="${escapeAttr(t.name)}">${escapeAttr(t.name)} (${t.count})</span>`).join('')}</div>
+        <div>${html}</div>
       `);
       attachSuggestionClicks();
       updateSuggestionHighlights();
@@ -751,8 +856,8 @@
       };
     });
   }
-
- 　// ============================================
+  
+  // ============================================
   // 保存・更新フォーム
   // ============================================
   function renderForm(overlay, pageData, existing, fromListView) {
@@ -760,7 +865,6 @@
     const headerActions = overlay.querySelector('.pk-header-actions');
     const isUpdate = existing.exists;
     
-    // ヘッダーに「📚 一覧」ボタン or 「← 戻る」ボタン
     setHTML(headerActions, fromListView
       ? `<button class="pk-mode-btn" id="pk-back-to-list">← 戻る</button>
          <button class="pk-close">×</button>`
@@ -832,7 +936,7 @@
           <option value="">プレフィックスなし</option>
           ${prefixOptions}
         </select>
-        <input type="text" id="pk-tag-name" placeholder="タグを入力（保存時に自動追加）">
+        <input type="text" id="pk-tag-name" placeholder="タグを入力(保存時に自動追加)">
         <button class="pk-tag-add-btn" id="pk-tag-add">+</button>
       </div>
       <div class="pk-warning" id="pk-tag-warning" style="display:none;"></div>
@@ -868,7 +972,6 @@
       }
     };
     
-    // 削除ボタン
     const deleteBtn = body.querySelector('.pk-delete');
     if (deleteBtn) {
       deleteBtn.onclick = () => {
@@ -891,7 +994,6 @@
       };
     }
     
-    // 保存/更新
     body.querySelector('.pk-submit').onclick = async () => {
       const statusInput = body.querySelector('input[name="pk-status"]:checked');
       if (!statusInput) {
@@ -918,9 +1020,10 @@
         tags: tagUI.getSelected(),
         status: statusInput.value,
         flags: flagsChecked,
+        imageUrl: pageData.imageUrl || '',
       });
       
-     if (result.success) {
+      if (result.success) {
         if (fromListView) {
           await reloadAndShowList(overlay);
         } else {
@@ -932,10 +1035,8 @@
             </div>
           `);
           
-          // 自動クローズタイマー
           const closeTimer = setTimeout(() => overlay.remove(), 2000);
           
-          // ヘッダーの「一覧」ボタンを押されたらタイマーキャンセルして一覧へ
           const showListBtn = overlay.querySelector('#pk-show-list');
           if (showListBtn) {
             showListBtn.onclick = async () => {
@@ -944,7 +1045,6 @@
             };
           }
           
-          // 「×」もタイマーキャンセル（押した瞬間に閉じる、ダブル発火防止）
           const closeBtn = overlay.querySelector('.pk-close');
           if (closeBtn) {
             closeBtn.onclick = () => {
@@ -1001,7 +1101,6 @@
     const body = overlay.querySelector('.pk-body');
     const headerActions = overlay.querySelector('.pk-header-actions');
     
-    // ヘッダー：戻る or ×
     setHTML(headerActions, `
       <button class="pk-mode-btn" id="pk-back-to-save">💾 保存画面へ</button>
       <button class="pk-close">×</button>
@@ -1055,17 +1154,15 @@
       <div class="pk-card-list" id="pk-cards"></div>
     `);
     
-   // フィルタ状態
     const filter = {
       keyword: '',
-      status: 'not-archive',  // デフォルトでアーカイブ除外
+      status: 'not-archive',
       flag: '',
       prefix: '',
       tags: [],
       sort: 'updated',
     };
     
-    // タグチップ（プレフィックスでフィルタされて表示）
     function renderFilterTagChips() {
       const el = body.querySelector('#pk-filter-tag-chips');
       let tagList = state.allTags;
@@ -1074,9 +1171,11 @@
       }
       tagList = [...tagList].sort((a, b) => b.count - a.count).slice(0, 30);
       
-      setHTML(el, tagList.map(t => 
-        `<span class="pk-tag-chip ${filter.tags.includes(t.name) ? 'selected' : ''}" data-tag="${escapeAttr(t.name)}">${escapeAttr(t.name)} (${t.count})</span>`
-      ).join(''));
+      setHTML(el, tagList.map(t => {
+        const isSelected = filter.tags.includes(t.name);
+        const style = tagChipStyle(t.name, state.prefixes, isSelected);
+        return `<span class="pk-tag-chip ${isSelected ? 'selected' : ''}" style="${style}" data-tag="${escapeAttr(t.name)}">${escapeAttr(t.name)} (${t.count})</span>`;
+      }).join(''));
       
       el.querySelectorAll('.pk-tag-chip').forEach(chip => {
         chip.onclick = () => {
@@ -1115,7 +1214,6 @@
       });
     }
     
-    // カード一覧
     function renderCards() {
       const filtered = applyFilter(state.allPages, filter);
       const sorted = applySort(filtered, filter.sort);
@@ -1133,7 +1231,6 @@
       
       el.querySelectorAll('.pk-card').forEach(card => {
         card.onclick = (e) => {
-          // リンククリックは詳細を開かない
           if (e.target.tagName === 'A') return;
           const id = card.dataset.id;
           const page = state.allPages.find(p => p.id === id);
@@ -1145,24 +1242,31 @@
     function renderCard(p) {
       const statusEmoji = (statusLabel(p.status).match(/^\S+/) || [''])[0];
       const flagStr = (p.flags || []).map(flagLabel).map(s => (s.match(/^\S+/) || [''])[0]).join(' ');
-      const tagsHtml = (p.tags || []).map(t => 
-        `<span class="pk-tag-chip">${escapeAttr(t)}</span>`
-      ).join('');
+      const tagsHtml = (p.tags || []).map(t => {
+        const style = tagChipStyle(t, state.prefixes, false);
+        return `<span class="pk-tag-chip" style="${style}">${escapeAttr(t)}</span>`;
+      }).join('');
       const updatedStr = p.updatedAt ? formatDateShort(p.updatedAt) : '';
       const savedStr = p.savedAt ? formatDateShort(p.savedAt) : '';
       const updateCountStr = p.updateCount > 0 ? ` (${p.updateCount}回更新)` : '';
+      const imageHtml = p.imageUrl 
+        ? `<img class="pk-card-image" src="${escapeAttr(p.imageUrl)}" alt="" onerror="this.style.display='none'">`
+        : '';
       
       return `
-        <div class="pk-card" data-id="${escapeAttr(p.id)}">
-          <div class="pk-card-title">${statusEmoji} ${escapeText(p.title || '無題')} ${flagStr}</div>
-          <div class="pk-card-links">
-            ${p.url ? `<a href="${escapeAttr(p.url)}" target="_blank">🔗 元ページ</a>` : ''}
-            ${p.docUrl ? `<a href="${escapeAttr(p.docUrl)}" target="_blank">📄 Doc</a>` : ''}
+        <div class="pk-card ${imageHtml ? 'has-image' : ''}" data-id="${escapeAttr(p.id)}">
+          ${imageHtml}
+          <div class="pk-card-content">
+            <div class="pk-card-title">${statusEmoji} ${escapeText(p.title || '無題')} ${flagStr}</div>
+            <div class="pk-card-links">
+              ${p.url ? `<a href="${escapeAttr(p.url)}" target="_blank">🔗 元ページ</a>` : ''}
+              ${p.docUrl ? `<a href="${escapeAttr(p.docUrl)}" target="_blank">📄 Doc</a>` : ''}
+            </div>
+            ${tagsHtml ? `<div class="pk-card-tags">${tagsHtml}</div>` : ''}
+            ${p.excerpt ? `<div class="pk-card-excerpt">${escapeText(p.excerpt)}</div>` : ''}
+            ${p.note ? `<div class="pk-card-note">📝 ${escapeText(p.note)}</div>` : ''}
+            <div class="pk-card-meta">保存: ${savedStr} / 更新: ${updatedStr}${updateCountStr}</div>
           </div>
-          ${tagsHtml ? `<div class="pk-card-tags">${tagsHtml}</div>` : ''}
-          ${p.excerpt ? `<div class="pk-card-excerpt">${escapeText(p.excerpt)}</div>` : ''}
-          ${p.note ? `<div class="pk-card-note">📝 ${escapeText(p.note)}</div>` : ''}
-          <div class="pk-card-meta">保存: ${savedStr} / 更新: ${updatedStr}${updateCountStr}</div>
         </div>
       `;
     }
@@ -1187,11 +1291,11 @@
         normalizedUrl: page.normalizedUrl,
         title: page.title,
         excerpt: page.excerpt,
+        imageUrl: page.imageUrl,
       };
       renderForm(overlay, pageDataForEdit, existingData, true);
     }
     
-    // イベント
     body.querySelector('#pk-search').oninput = (e) => {
       filter.keyword = e.target.value;
       renderCards();
@@ -1206,7 +1310,7 @@
     };
     body.querySelector('#pk-filter-prefix').onchange = (e) => {
       filter.prefix = e.target.value;
-      filter.tags = []; // プレフィックス変更時はタグ選択をリセット
+      filter.tags = [];
       renderFilterTagChips();
       renderSelectedFilterTags();
       renderCards();
@@ -1224,7 +1328,7 @@
   // ============================================
   // フィルタロジック
   // ============================================
- function applyFilter(pages, filter) {
+  function applyFilter(pages, filter) {
     const kw = filter.keyword ? normalizeForCompare(filter.keyword) : '';
     
     return pages.filter(p => {
