@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PageKeep セットアップガイド</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", sans-serif;
+      line-height: 1.7;
+      color: #1a1a1a;
+      background: #fafafa;
+      margin: 0; padding: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+    }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    h2 { 
+      font-size: 22px; 
+      margin: 40px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #0066cc;
+    }
+    h3 { font-size: 17px; margin: 24px 0 8px; }
+    p { margin: 8px 0; }
+    .subtitle { color: #666; margin-bottom: 32px; font-size: 16px; }
+    
+    .intro-box {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0;
+    }
+    
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .feature {
+      background: #f0f8ff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    /* タブ */
+    .device-tabs {
+      display: flex;
+      gap: 4px;
+      margin: 20px 0 0;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    .device-tab {
+      padding: 10px 16px;
+      background: #f0f0f0;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 8px 8px 0 0;
+      color: #666;
+    }
+    .device-tab.active {
+      background: #fff;
+      color: #0066cc;
+      font-weight: 600;
+      border: 1px solid #e0e0e0;
+      border-bottom: 2px solid #fff;
+      margin-bottom: -2px;
+    }
+    
+    /* ステップ */
+    .step {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .step-num {
+      background: #0066cc;
+      color: #fff;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .step-title { font-size: 18px; font-weight: 600; margin: 0; }
+    
+    .step ol, .step ul { padding-left: 24px; }
+    .step li { margin: 6px 0; }
+    
+    /* コードブロック */
+    .code-block {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 12px;
+      margin: 12px 0;
+      font-family: 'SF Mono', Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-x: auto;
+      white-space: pre;
+      position: relative;
+    }
+    .code-block.scrollable {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: #0066cc;
+      color: #fff;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .copy-btn:hover { background: #0052a3; }
+    .copy-btn.copied { background: #28a745; }
+    
+    /* インライン入力 */
+    .input-group {
+      margin: 12px 0;
+    }
+    .input-group label {
+      display: block;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-family: inherit;
+    }
+    .input-with-btn {
+      display: flex;
+      gap: 6px;
+    }
+    .input-with-btn input { flex: 1; }
+    
+    .btn {
+      padding: 8px 16px;
+      background: #0066cc;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn:hover { background: #0052a3; }
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+      border: 1px solid #ccc;
+    }
+    .btn-secondary:hover { background: #e0e0e0; }
+    
+    /* アラート/ヒント */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin: 12px 0;
+    }
+    .alert-warn {
+      background: #fff8e1;
+      border-left: 4px solid #ffa000;
+    }
+    .alert-info {
+      background: #e3f2fd;
+      border-left: 4px solid #0066cc;
+    }
+    .alert-tip {
+      background: #e8f5e9;
+      border-left: 4px solid #4caf50;
+    }
+    
+    .device-content { display: none; }
+    .device-content.active { display: block; }
+    
+    a { color: #0066cc; }
+    
+    code {
+      background: #f0f0f0;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-family: 'SF Mono', Menlo, Consolas, monospace;
+      font-size: 13px;
+    }
+    
+    .toc {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0 24px;
+    }
+    .toc-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .toc ol { margin: 0; padding-left: 24px; }
+    .toc a { text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    
+    @media (prefers-color-scheme: dark) {
+      body { background: #1a1a1a; color: #e0e0e0; }
+      .intro-box, .step, .toc { background: #2a2a2a; border-color: #444; }
+      h2 { border-color: #0099ff; }
+      .feature { background: #1e3a5f; }
+      .code-block { background: #1a1a1a; border-color: #444; color: #e0e0e0; }
+      code { background: #444; color: #e0e0e0; }
+      .input-group input { background: #1a1a1a; color: #e0e0e0; border-color: #444; }
+      .device-tab { background: #333; color: #aaa; }
+      .device-tab.active { background: #2a2a2a; color: #0099ff; border-color: #444; border-bottom-color: #2a2a2a; }
+      .btn-secondary { background: #333; color: #e0e0e0; border-color: #555; }
+      .alert-warn { background: #3a2e1a; }
+      .alert-info { background: #1a3a5f; }
+      .alert-tip { background: #1a3a2a; }
+      .device-tabs { border-color: #444; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <h1>📌 PageKeep セットアップガイド</h1>
+    <p class="subtitle">あなただけのWebページ保存ツール。Notionの代替に。</p>
+    
+    <div class="intro-box">
+      <h3 style="margin-top:0;">PageKeepとは</h3>
+      <p>気になるWebページをワンタップで保存できる、自分専用のブックマーク+メモツールです。Google スプレッドシートとGoogleドキュメントを使うので、すべて自分のGoogleアカウント内で完結します。</p>
+      <div class="features">
+        <div class="feature">🏷️ タグ・カテゴリで整理</div>
+        <div class="feature">📖 ステータス管理（未読/読了など）</div>
+        <div class="feature">⭐ お気に入り・重要マーク</div>
+        <div class="feature">🔍 キーワード検索・絞り込み</div>
+        <div class="feature">🖼️ サムネ画像表示</div>
+        <div class="feature">📝 メモ・抜粋を残せる</div>
+        <div class="feature">📱 iPhone/iPad/PC対応</div>
+        <div class="feature">🔒 完全にあなた専用</div>
+      </div>
+    </div>
+    
+    <div class="alert alert-info">
+      <strong>所要時間</strong>：約15〜20分。コピペが中心で、プログラミング知識は不要です。
+    </div>
+    
+    <div class="toc">
+      <div class="toc-title">📚 目次</div>
+      <ol>
+        <li><a href="#step1">スプレッドシート準備</a></li>
+        <li><a href="#step2">Drive フォルダ準備</a></li>
+        <li><a href="#step3">Apps Script プロジェクト作成</a></li>
+        <li><a href="#step4">コードを貼り付け + 設定</a></li>
+        <li><a href="#step5">ウェブアプリとしてデプロイ</a></li>
+        <li><a href="#step6">ブックマークレット生成</a></li>
+        <li><a href="#step7">ブラウザに登録</a></li>
+        <li><a href="#usage">使い方</a></li>
+        <li><a href="#troubleshoot">トラブルシューティング</a></li>
+      </ol>
+    </div>
+    
+    <h2>📲 セットアップ手順</h2>
+    
+    <p>お使いのデバイスを選んでください（自動で検出済み）：</p>
+    
+    <div class="device-tabs">
+      <button class="device-tab" data-device="pc">💻 PC</button>
+      <button class="device-tab" data-device="ipad">📱 iPad</button>
+      <button class="device-tab" data-device="iphone">📱 iPhone</button>
+    </div>
+    
+    <!-- ============= Step 1 ============= -->
+    <div class="step" id="step1">
+      <div class="step-header">
+        <div class="step-num">1</div>
+        <h3 class="step-title">スプレッドシート準備</h3>
+      </div>
+      
+      <p>Webページのリストを管理するスプレッドシートを準備します。</p>
+      
+      <ol>
+        <li>下のリンクをクリック → 「コピーを作成」ボタンをクリック</li>
+        <li>あなたのGoogleドライブに「PageKeep_Template のコピー」というファイルが作成されます</li>
+        <li>名前を <code>PageKeep</code> に変更してください</li>
+      </ol>
+      
+      <p>
+        <a href="https://docs.google.com/spreadsheets/d/1Zl_aEGu8lLxjwuWkpA9GzmXDRJ-CaXYu6UbmCzfBlAs/copy" target="_blank" class="btn">📋 スプレッドシートテンプレを開く</a>
+      </p>
+      
+      <h4>スプレッドシートIDをコピー</h4>
+      <p>作成したスプレッドシートを開いた状態で、URLからIDをコピーします：</p>
+      <div class="code-block" style="white-space:normal;">
+https://docs.google.com/spreadsheets/d/<strong style="color:#0066cc;">XXXXXXXXXXXXX</strong>/edit
+      </div>
+      <p>上の太字部分（<code>XXXXX...</code>）があなたのスプレッドシートIDです。</p>
+      
+      <div class="input-group">
+        <label>あなたのスプレッドシートID（後で使うので、ここにメモしておきましょう）</label>
+        <input type="text" id="userSpreadsheetId" placeholder="貼り付け">
+      </div>
+      
+      <div class="alert alert-warn">
+        <strong>⚠ 注意</strong>：このスプレッドシートは絶対に削除しないでください。中のシート名「Pages」「Tags」「Prefixes」も変更しないでください。
+      </div>
+    </div>
+    
+    <!-- ============= Step 2 ============= -->
+    <div class="step" id="step2">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <h3 class="step-title">Drive フォルダ準備</h3>
+      </div>
+      
+      <p>保存したWebページごとに1つずつGoogleドキュメントが作られます。それを整理するフォルダを作ります。</p>
+      
+      <ol>
+        <li><a href="https://drive.google.com" target="_blank">Google ドライブ</a> を開く</li>
+        <li>「+ 新規」→「フォルダ」</li>
+        <li>名前：<code>PageKeep_Docs</code>（好きな名前でOK）</li>
+        <li>作成したフォルダを開く</li>
+        <li>URLからフォルダIDをコピー：</li>
+      </ol>
+      
+      <div class="code-block" style="white-space:normal;">
+https://drive.google.com/drive/folders/<strong style="color:#0066cc;">XXXXXXXXXXXXX</strong>
+      </div>
+      
+      <div class="input-group">
+        <label>あなたのフォルダID（後で使うのでメモ）</label>
+        <input type="text" id="userFolderId" placeholder="貼り付け">
+      </div>
+    </div>
+    
+    <!-- ============= Step 3 ============= -->
+    <div class="step" id="step3">
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <h3 class="step-title">Apps Script プロジェクト作成</h3>
+      </div>
+      
+      <p>サーバー側の処理を行うプログラムを作ります。</p>
+      
+      <ol>
+        <li><a href="https://script.google.com" target="_blank">script.google.com</a> を開く</li>
+        <li>「+ 新しいプロジェクト」をクリック</li>
+        <li>左上のプロジェクト名「無題のプロジェクト」をクリック → <code>PageKeep</code> に変更</li>
+      </ol>
+    </div>
+    
+    <!-- ============= Step 4 ============= -->
+    <div class="step" id="step4">
+      <div class="step-header">
+        <div class="step-num">4</div>
+        <h3 class="step-title">コードを貼り付け + 設定</h3>
+      </div>
+      
+      <p>以下のコードを Apps Script エディタに貼り付けます。</p>
+      
+      <ol>
+        <li>エディタの既存コード（<code>function myFunction() {}</code>など）を<strong>全部削除</strong></li>
+        <li>下の「コードをコピー」ボタンを押す</li>
+        <li>エディタに貼り付け</li>
+      </ol>
+      
+      <div class="code-block scrollable" id="gasCode"></div>
+      <button class="copy-btn" onclick="copyGasCode()" id="copyGasBtn">コードをコピー</button>
+      
+      <h4 style="margin-top:24px;">設定箇所を書き換え</h4>
+      <p>コード冒頭の <code>CONFIG</code> 部分の3つの値を、あなた専用の値に書き換えます。下のフォームに入力すると、コードが自動で書き換わります。</p>
+      
+      <div class="input-group">
+        <label>スプレッドシートID（Step 1で取得）</label>
+        <input type="text" id="configSpreadsheet" placeholder="スプレッドシートID">
+      </div>
+      
+      <div class="input-group">
+        <label>Drive フォルダID（Step 2で取得）</label>
+        <input type="text" id="configFolder" placeholder="フォルダID">
+      </div>
+      
+      <div class="input-group">
+        <label>シークレット（あなただけが知る合言葉）</label>
+        <div class="input-with-btn">
+          <input type="text" id="configSecret" placeholder="ランダム生成ボタンを押すか、好きな文字列を入れる">
+          <button class="btn" onclick="generateSecret()">🎲 ランダム生成</button>
+        </div>
+      </div>
+      
+      <div class="alert alert-warn">
+        <strong>⚠ シークレットの取り扱い</strong>：シークレットは「あなたのGAS」と「あなたのブックマークレット」だけが知る合言葉です。他人に教えないでください。後で Step 6 で同じ値を使います。
+      </div>
+      
+      <p>上記3つを入力すると、上のコードが自動で書き換わります。書き換わったコードをコピーして、エディタに貼り付けてください。</p>
+      
+      <ol start="4">
+        <li>貼り付けたら、左上のフロッピーアイコン（💾）または <code>Ctrl + S</code> で保存</li>
+      </ol>
+    </div>
+    
+    <!-- ============= Step 5 ============= -->
+    <div class="step" id="step5">
+      <div class="step-header">
+        <div class="step-num">5</div>
+        <h3 class="step-title">ウェブアプリとしてデプロイ</h3>
+      </div>
+      
+      <p>保存したコードを「ウェブアプリ」として公開します（あなたしかアクセスできない形式です）。</p>
+      
+      <ol>
+        <li>右上の「<strong>デプロイ</strong>」ボタン → 「<strong>新しいデプロイ</strong>」</li>
+        <li>左上の歯車アイコン → 「<strong>ウェブアプリ</strong>」を選択</li>
+        <li>設定：
+          <ul>
+            <li>説明：<code>PageKeep v1</code>（任意）</li>
+            <li>次のユーザーとして実行：<strong>自分</strong></li>
+            <li>アクセスできるユーザー：<strong>全員</strong></li>
+          </ul>
+        </li>
+        <li>「<strong>デプロイ</strong>」をクリック</li>
+        <li>初回は「アクセスを承認」を求められます：
+          <ul>
+            <li>「アクセスを承認」をクリック</li>
+            <li>自分のGoogleアカウントを選択</li>
+            <li>「PageKeep は Google で確認されていません」と出たら、「<strong>詳細</strong>」→「<strong>PageKeep（安全ではないページ）に移動</strong>」</li>
+            <li>権限を許可</li>
+          </ul>
+        </li>
+        <li>表示された「ウェブアプリ」のURLをコピー</li>
+      </ol>
+      
+      <div class="alert alert-info">
+        <strong>ℹ「安全ではない」と出る理由</strong>：あなた自身が作ったプログラムなので、Googleの審査を経ていないだけです。あなたが作ってあなたが使うので安全です。
+      </div>
+      
+      <div class="input-group">
+        <label>あなたのウェブアプリURL（後で使うのでメモ）</label>
+        <input type="text" id="userGasUrl" placeholder="https://script.google.com/macros/s/.../exec">
+      </div>
+      
+      <h4>動作確認</h4>
+      <p>上のURLをブラウザの新しいタブで開いてみてください。以下の表示が出れば成功です：</p>
+      <div class="code-block">PageKeep server is running. Version: 6</div>
+    </div>
+    
+    <!-- ============= Step 6 ============= -->
+    <div class="step" id="step6">
+      <div class="step-header">
+        <div class="step-num">6</div>
+        <h3 class="step-title">ブックマークレット生成</h3>
+      </div>
+      
+      <p>ブラウザに登録する「ブックマークレット」を生成します。これがPageKeepの起動ボタンになります。</p>
+      
+      <div class="input-group">
+        <label>ウェブアプリURL（Step 5で取得）</label>
+        <input type="text" id="bookmarkletGasUrl" placeholder="https://script.google.com/macros/s/.../exec">
+      </div>
+      
+      <div class="input-group">
+        <label>シークレット（Step 4と同じ値）</label>
+        <input type="text" id="bookmarkletSecret" placeholder="Step 4で入れたシークレット">
+      </div>
+      
+      <button class="btn" onclick="generateBookmarklet()">🔧 ブックマークレットを生成</button>
+      
+      <div id="bookmarkletResult" style="display:none; margin-top:16px;">
+        <h4>生成されたブックマークレット</h4>
+        <div class="code-block scrollable" id="bookmarkletCode"></div>
+        <button class="copy-btn" onclick="copyBookmarklet()" id="copyBookmarkletBtn">コピー</button>
+      </div>
+    </div>
+    
+    <!-- ============= Step 7 ============= -->
+    <div class="step" id="step7">
+      <div class="step-header">
+        <div class="step-num">7</div>
+        <h3 class="step-title">ブラウザに登録</h3>
+      </div>
+      
+      <!-- PC -->
+      <div class="device-content" data-device="pc">
+        <h4>PC（Chrome / Edge / Safari）</h4>
+        <ol>
+          <li>ブックマークバーが表示されていない場合、表示する：
+            <ul>
+              <li>Chrome / Edge: <code>Ctrl + Shift + B</code></li>
+              <li>Safari: 表示メニュー → 「お気に入りバーを表示」</li>
+            </ul>
+          </li>
+          <li>ブックマークバーの空白部分を右クリック → 「ページを追加」または「ブックマークを追加」</li>
+          <li>名前：<code>📌 PageKeep</code>（好きな名前でOK）</li>
+          <li>URL：Step 6でコピーしたブックマークレット（<code>javascript:</code>で始まる長いコード）を貼り付け</li>
+          <li>保存</li>
+        </ol>
+        <div class="alert alert-tip">
+          <strong>💡 使い方</strong>：気になるWebページを開いた状態で、ブックマークバーの「📌 PageKeep」をクリック！
+        </div>
+      </div>
+      
+      <!-- iPad -->
+      <div class="device-content" data-device="ipad">
+        <h4>iPad Safari</h4>
+        <ol>
+          <li>適当なWebページを開く（このページのままでOK）</li>
+          <li>下部の共有ボタン（□↑）→ 「ブックマークを追加」</li>
+          <li>名前を <code>📌 PageKeep</code> に変更して保存</li>
+          <li>サイドバー（左上の本のアイコン）→ ブックマーク → 今作ったブックマークを長押し → 「編集」</li>
+          <li>URL欄の内容を全部削除 → Step 6でコピーしたブックマークレットを貼り付け</li>
+          <li>「完了」をタップ</li>
+        </ol>
+        <div class="alert alert-tip">
+          <strong>💡 使い方</strong>：保存したいページを開いた状態で、ブックマークからPageKeepをタップ！
+        </div>
+      </div>
+      
+      <!-- iPhone -->
+      <div class="device-content" data-device="iphone">
+        <h4>iPhone Safari</h4>
+        <p>iPhone Safariでは <code>javascript:</code> から始まるURLを直接ブックマーク登録できません。回避手順：</p>
+        <ol>
+          <li>適当なWebページを開く（このページのままでOK）</li>
+          <li>下部の共有ボタン（□↑）→ 「ブックマークを追加」</li>
+          <li>名前を <code>📌 PageKeep</code> に変更して保存</li>
+          <li>下部のブックマークアイコン（本のマーク）→ ブックマーク → 「編集」</li>
+          <li>今作ったブックマークをタップ</li>
+          <li>URL欄の内容を全部削除 → Step 6でコピーしたブックマークレットを貼り付け</li>
+          <li>「完了」をタップ → 「完了」をもう一度タップ</li>
+        </ol>
+        <div class="alert alert-warn">
+          <strong>⚠ よくあるトラブル</strong>：URL欄に貼り付けた時、自動補完で違うURLになってしまうことがあります。確実に <code>javascript:</code> で始まっているかチェックしてください。
+        </div>
+        <div class="alert alert-tip">
+          <strong>💡 使い方</strong>：保存したいページを開いた状態で、アドレスバーをタップ → ブックマークタブ → 「📌 PageKeep」をタップ！
+        </div>
+      </div>
+    </div>
+    
+    <!-- ============= 使い方 ============= -->
+    <h2 id="usage">📖 使い方</h2>
+    
+    <div class="step">
+      <h3>新しいページを保存</h3>
+      <ol>
+        <li>保存したいWebページを開く</li>
+        <li>ブックマーク「📌 PageKeep」をクリック</li>
+        <li>タイトル、ステータス（必須）、タグ、メモを入力</li>
+        <li>「保存」</li>
+      </ol>
+      
+      <h3>過去のページを見る</h3>
+      <ol>
+        <li>どこのページでもいいので「📌 PageKeep」を起動</li>
+        <li>右上の「📚 一覧」をタップ</li>
+        <li>検索・絞り込みで見つける</li>
+        <li>カードをタップすると詳細編集・削除ができる</li>
+      </ol>
+      
+      <h3>ステータスを変える</h3>
+      <ol>
+        <li>一覧から該当ページのカードをタップ</li>
+        <li>ステータスを変更</li>
+        <li>「更新」</li>
+      </ol>
+      
+      <h3>不要なページを削除</h3>
+      <ol>
+        <li>一覧から該当ページのカードをタップ</li>
+        <li>左下の「🗑 削除」</li>
+        <li>確認ダイアログで「削除する」</li>
+      </ol>
+    </div>
+    
+    <!-- ============= トラブルシューティング ============= -->
+    <h2 id="troubleshoot">🔧 トラブルシューティング</h2>
+    
+    <div class="step">
+      <h3>ブックマークレットが反応しない</h3>
+      <ul>
+        <li>URLが <code>javascript:</code> で始まっているか確認</li>
+        <li>iPhone の場合は自動補完で別URLになっていないか確認</li>
+        <li>Step 5 のウェブアプリURLをブラウザで開いて <code>Version: 6</code> が出るか確認</li>
+      </ul>
+      
+      <h3>「PageKeep: 設定が不完全です」と出る</h3>
+      <ul>
+        <li>ブックマークレットのコードが途中で切れている可能性。Step 6 から作り直す</li>
+      </ul>
+      
+      <h3>「通信エラー」と出る</h3>
+      <ul>
+        <li>ウェブアプリURLが正しいか確認</li>
+        <li>GASを再デプロイ：デプロイ→デプロイを管理→鉛筆アイコン→新しいバージョン→デプロイ</li>
+      </ul>
+      
+      <h3>シート名のエラー</h3>
+      <ul>
+        <li>Pages、Tags、Prefixes のシート名に半角スペースが入っていないか確認</li>
+        <li>シート名をダブルクリックして確認、余計な文字があれば削除</li>
+      </ul>
+      
+      <h3>「GASの更新が必要です」と出る</h3>
+      <ul>
+        <li>新しいバージョンのGASコードが必要です。Step 4 の最新コードをコピーして、GASエディタで貼り直し → Step 5 で再デプロイ（「新しいバージョン」を選ぶ）</li>
+      </ul>
+    </div>
+    
+    <p style="text-align:center; color:#999; margin-top:60px; font-size:13px;">
+      PageKeep セットアップガイド v1
+    </p>
+    
+  </div>
+  
+  <script>
+    // ============================================
+    // GASコードのテンプレート
+    // ============================================
+    const GAS_CODE_TEMPLATE = `// ============================================
+// PageKeep - GAS Server (v6)
+// ============================================
+const GAS_VERSION = 6;
+
+const CONFIG = {
+  SPREADSHEET_ID: 'YOUR_SPREADSHEET_ID_HERE',
+  DOCS_FOLDER_ID: 'YOUR_FOLDER_ID_HERE',
+  SECRET: 'YOUR_SECRET_HERE',
+  PAGES_SHEET_NAME: 'Pages',
+  TAGS_SHEET_NAME: 'Tags',
+  PREFIXES_SHEET_NAME: 'Prefixes',
+};
+
+const COL = {
+  ID: 1, SAVED_AT: 2, UPDATED_AT: 3, TITLE: 4,
+  URL: 5, NORMALIZED_URL: 6, DOC_URL: 7, TAGS: 8,
+  EXCERPT: 9, NOTE: 10, UPDATE_COUNT: 11,
+  STATUS: 12, FLAGS: 13, IMAGE_URL: 14,
+};
+const COL_COUNT = 14;
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    if (data.action === 'version') return jsonResponse({ version: GAS_VERSION });
+    if (data.secret !== CONFIG.SECRET) return jsonResponse({ error: 'Unauthorized' });
+    switch (data.action) {
+      case 'save':         return jsonResponse(savePage(data));
+      case 'update':       return jsonResponse(updatePage(data));
+      case 'delete':       return jsonResponse(deletePage(data));
+      case 'check':        return jsonResponse(checkExisting(data));
+      case 'getAllPages':  return jsonResponse(getAllPages());
+      case 'getPrefixes':  return jsonResponse(getPrefixes());
+      case 'getTags':      return jsonResponse(getTags());
+      case 'addPrefix':    return jsonResponse(addPrefix(data));
+      default:             return jsonResponse({ error: 'Unknown action: ' + data.action });
+    }
+  } catch (err) {
+    return jsonResponse({ error: 'Server error: ' + err.message });
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput('PageKeep server is running. Version: ' + GAS_VERSION).setMimeType(ContentService.MimeType.TEXT);
+}
+
+function savePage(data) {
+  const sheet = getPagesSheet();
+  const now = new Date();
+  const normalized = data.normalizedUrl || data.url || '';
+  if (normalized && findRowByUrl(sheet, normalized) > 0) {
+    return { success: false, duplicate: true, error: 'このページは既に保存されています。' };
+  }
+  const id = 'pk_' + now.getTime();
+  const doc = createDoc(data, now);
+  const docUrl = doc.getUrl();
+  sheet.appendRow([
+    id, now, now, data.title || '', data.url || '', normalized, docUrl,
+    (data.tags || []).join(', '), data.excerpt || '', data.note || '',
+    0, data.status || 'unread', (data.flags || []).join(', '), data.imageUrl || '',
+  ]);
+  updateTagsMaster(data.tags || []);
+  return { success: true, id: id, docUrl: docUrl };
+}
+
+function updatePage(data) {
+  const sheet = getPagesSheet();
+  const now = new Date();
+  const normalized = data.normalizedUrl || data.url || '';
+  let rowNum = -1;
+  if (data.id) rowNum = findRowById(sheet, data.id);
+  if (rowNum < 0 && normalized) rowNum = findRowByUrl(sheet, normalized);
+  if (rowNum < 0) return { success: false, error: '既存ページが見つかりませんでした。' };
+  
+  const existingRow = sheet.getRange(rowNum, 1, 1, COL_COUNT).getValues()[0];
+  const docUrl = existingRow[COL.DOC_URL - 1];
+  const currentCount = existingRow[COL.UPDATE_COUNT - 1] || 0;
+  const oldTitle = existingRow[COL.TITLE - 1];
+  const oldTags = (existingRow[COL.TAGS - 1] || '').split(',').map(t => t.trim()).filter(Boolean);
+  const oldImageUrl = existingRow[COL.IMAGE_URL - 1] || '';
+  
+  const newTags = data.tags || [];
+  const newTitle = data.title || oldTitle;
+  const newImageUrl = (data.imageUrl !== undefined) ? data.imageUrl : oldImageUrl;
+  
+  sheet.getRange(rowNum, COL.UPDATED_AT).setValue(now);
+  sheet.getRange(rowNum, COL.TITLE).setValue(newTitle);
+  sheet.getRange(rowNum, COL.TAGS).setValue(newTags.join(', '));
+  sheet.getRange(rowNum, COL.EXCERPT).setValue(data.excerpt || '');
+  sheet.getRange(rowNum, COL.NOTE).setValue(data.note || '');
+  sheet.getRange(rowNum, COL.UPDATE_COUNT).setValue(currentCount + 1);
+  sheet.getRange(rowNum, COL.STATUS).setValue(data.status || 'unread');
+  sheet.getRange(rowNum, COL.FLAGS).setValue((data.flags || []).join(', '));
+  sheet.getRange(rowNum, COL.IMAGE_URL).setValue(newImageUrl);
+  
+  if (newTitle && newTitle !== oldTitle && docUrl) {
+    try {
+      const docId = extractDocId(docUrl);
+      if (docId) DriveApp.getFileById(docId).setName(newTitle);
+    } catch (e) {}
+  }
+  appendUpdateHistory(docUrl, data, now);
+  const addedTags = newTags.filter(t => !oldTags.includes(t));
+  updateTagsMaster(addedTags);
+  return { success: true, docUrl: docUrl, updateCount: currentCount + 1 };
+}
+
+function deletePage(data) {
+  const sheet = getPagesSheet();
+  let rowNum = -1;
+  if (data.id) rowNum = findRowById(sheet, data.id);
+  if (rowNum < 0 && data.normalizedUrl) rowNum = findRowByUrl(sheet, data.normalizedUrl);
+  if (rowNum < 0) return { success: false, error: '対象ページが見つかりませんでした。' };
+  
+  const docUrl = sheet.getRange(rowNum, COL.DOC_URL).getValue();
+  if (docUrl) {
+    try {
+      const docId = extractDocId(docUrl);
+      if (docId) DriveApp.getFileById(docId).setTrashed(true);
+    } catch (e) {}
+  }
+  sheet.deleteRow(rowNum);
+  return { success: true };
+}
+
+function checkExisting(data) {
+  const sheet = getPagesSheet();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { exists: false };
+  const normalized = data.normalizedUrl || data.url;
+  const rows = sheet.getRange(2, 1, lastRow - 1, COL_COUNT).getValues();
+  const found = rows.find(row => row[COL.NORMALIZED_URL - 1] === normalized);
+  if (!found) return { exists: false };
+  return {
+    exists: true,
+    id: found[COL.ID - 1],
+    savedAt: found[COL.SAVED_AT - 1],
+    title: found[COL.TITLE - 1],
+    docUrl: found[COL.DOC_URL - 1],
+    tags: (found[COL.TAGS - 1] || '').split(',').map(t => t.trim()).filter(Boolean),
+    note: found[COL.NOTE - 1],
+    excerpt: found[COL.EXCERPT - 1] || '',
+    updateCount: found[COL.UPDATE_COUNT - 1] || 0,
+    status: found[COL.STATUS - 1] || 'unread',
+    flags: (found[COL.FLAGS - 1] || '').split(',').map(t => t.trim()).filter(Boolean),
+    imageUrl: found[COL.IMAGE_URL - 1] || '',
+  };
+}
+
+function getAllPages() {
+  const sheet = getPagesSheet();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { pages: [] };
+  const rows = sheet.getRange(2, 1, lastRow - 1, COL_COUNT).getValues();
+  const pages = rows.filter(row => row[COL.ID - 1]).map(row => ({
+    id: row[COL.ID - 1],
+    savedAt: row[COL.SAVED_AT - 1] ? new Date(row[COL.SAVED_AT - 1]).toISOString() : null,
+    updatedAt: row[COL.UPDATED_AT - 1] ? new Date(row[COL.UPDATED_AT - 1]).toISOString() : null,
+    title: row[COL.TITLE - 1] || '',
+    url: row[COL.URL - 1] || '',
+    normalizedUrl: row[COL.NORMALIZED_URL - 1] || '',
+    docUrl: row[COL.DOC_URL - 1] || '',
+    tags: (row[COL.TAGS - 1] || '').split(',').map(t => t.trim()).filter(Boolean),
+    excerpt: row[COL.EXCERPT - 1] || '',
+    note: row[COL.NOTE - 1] || '',
+    updateCount: row[COL.UPDATE_COUNT - 1] || 0,
+    status: row[COL.STATUS - 1] || 'unread',
+    flags: (row[COL.FLAGS - 1] || '').split(',').map(t => t.trim()).filter(Boolean),
+    imageUrl: row[COL.IMAGE_URL - 1] || '',
+  }));
+  return { pages: pages };
+}
+
+function getPrefixes() {
+  const sheet = getPrefixesSheet();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { prefixes: [] };
+  const rows = sheet.getRange(2, 1, lastRow - 1, 4).getValues();
+  return {
+    prefixes: rows.filter(r => r[0]).map(r => ({
+      name: r[0], description: r[1] || '', count: r[2] || 0, color: r[3] || '',
+    })),
+  };
+}
+
+function addPrefix(data) {
+  const name = (data.prefixName || '').trim();
+  if (!name) return { error: 'プレフィックス名が空です' };
+  const sheet = getPrefixesSheet();
+  const lastRow = sheet.getLastRow();
+  if (lastRow >= 2) {
+    const existing = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    if (existing.some(r => r[0] === name)) {
+      return { error: 'そのプレフィックスは既に存在します' };
+    }
+  }
+  sheet.appendRow([name, data.description || '', 0, '']);
+  return { success: true, name: name };
+}
+
+function getTags() {
+  const sheet = getTagsSheet();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { tags: [] };
+  const rows = sheet.getRange(2, 1, lastRow - 1, 4).getValues();
+  return {
+    tags: rows.filter(r => r[0]).map(r => ({
+      name: r[0], prefix: r[1] || '', count: r[2] || 0,
+      lastUsed: r[3] ? new Date(r[3]).toISOString() : null,
+    })).sort((a, b) => b.count - a.count),
+  };
+}
+
+function updateTagsMaster(tagList) {
+  if (!tagList || tagList.length === 0) return;
+  const sheet = getTagsSheet();
+  const lastRow = sheet.getLastRow();
+  const now = new Date();
+  const existingData = lastRow >= 2 ? sheet.getRange(2, 1, lastRow - 1, 4).getValues() : [];
+  const existingMap = {};
+  existingData.forEach((row, i) => { if (row[0]) existingMap[row[0]] = i + 2; });
+  const prefixCounter = {};
+  tagList.forEach(fullTag => {
+    const parts = fullTag.split('/');
+    const prefix = parts.length > 1 ? parts[0] : '';
+    if (prefix) prefixCounter[prefix] = (prefixCounter[prefix] || 0) + 1;
+    if (existingMap[fullTag]) {
+      const rowNum = existingMap[fullTag];
+      const currentCount = sheet.getRange(rowNum, 3).getValue() || 0;
+      sheet.getRange(rowNum, 3).setValue(currentCount + 1);
+      sheet.getRange(rowNum, 4).setValue(now);
+    } else {
+      sheet.appendRow([fullTag, prefix, 1, now]);
+    }
+  });
+  updatePrefixCounts(prefixCounter);
+}
+
+function updatePrefixCounts(counter) {
+  const sheet = getPrefixesSheet();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+  const data = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+  data.forEach((row, i) => {
+    if (counter[row[0]]) {
+      const newCount = (row[2] || 0) + counter[row[0]];
+      sheet.getRange(i + 2, 3).setValue(newCount);
+    }
+  });
+}
+
+function createDoc(data, now) {
+  const folder = DriveApp.getFolderById(CONFIG.DOCS_FOLDER_ID);
+  const doc = DocumentApp.create(data.title || 'Untitled');
+  const docFile = DriveApp.getFileById(doc.getId());
+  folder.addFile(docFile);
+  DriveApp.getRootFolder().removeFile(docFile);
+  const body = doc.getBody();
+  body.clear();
+  if (data.title) body.appendParagraph(data.title).setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  if (data.url) {
+    const linkText = '🔗 元ページを開く';
+    const linkPara = body.appendParagraph(linkText);
+    linkPara.editAsText().setLinkUrl(0, linkText.length - 1, data.url);
+  }
+  body.appendParagraph('保存日時: ' + formatDate(now));
+  const statusLabelStr = getStatusLabel(data.status);
+  const flagLabels = (data.flags || []).map(getFlagLabel).join(' ');
+  if (statusLabelStr || flagLabels) body.appendParagraph('ステータス: ' + statusLabelStr + '  ' + flagLabels);
+  if ((data.tags || []).length > 0) body.appendParagraph('タグ: ' + data.tags.join(', '));
+  if (data.excerpt) {
+    body.appendParagraph('抜粋').setHeading(DocumentApp.ParagraphHeading.HEADING2);
+    body.appendParagraph(data.excerpt);
+  }
+  if (data.note) {
+    body.appendParagraph('メモ').setHeading(DocumentApp.ParagraphHeading.HEADING2);
+    body.appendParagraph(data.note);
+  }
+  doc.saveAndClose();
+  return doc;
+}
+
+function appendUpdateHistory(docUrl, data, now) {
+  if (!docUrl) return;
+  try {
+    const docId = extractDocId(docUrl);
+    if (!docId) return;
+    const doc = DocumentApp.openById(docId);
+    const body = doc.getBody();
+    body.appendParagraph('');
+    body.appendParagraph('───────────────');
+    body.appendParagraph('📝 更新: ' + formatDate(now)).setHeading(DocumentApp.ParagraphHeading.HEADING3);
+    const statusLabelStr = getStatusLabel(data.status);
+    const flagLabels = (data.flags || []).map(getFlagLabel).join(' ');
+    if (statusLabelStr || flagLabels) body.appendParagraph('ステータス: ' + statusLabelStr + '  ' + flagLabels);
+    if ((data.tags || []).length > 0) body.appendParagraph('タグ: ' + data.tags.join(', '));
+    if (data.excerpt) { body.appendParagraph('抜粋:'); body.appendParagraph(data.excerpt); }
+    if (data.note) { body.appendParagraph('メモ:'); body.appendParagraph(data.note); }
+    doc.saveAndClose();
+  } catch (e) {}
+}
+
+function extractDocId(docUrl) {
+  const m = String(docUrl).match(/[?&]id=([a-zA-Z0-9_-]+)|\\/d\\/([a-zA-Z0-9_-]+)/);
+  return m ? (m[1] || m[2]) : null;
+}
+
+function findRowByUrl(sheet, normalizedUrl) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return -1;
+  const urlCol = sheet.getRange(2, COL.NORMALIZED_URL, lastRow - 1, 1).getValues();
+  for (let i = 0; i < urlCol.length; i++) {
+    if (urlCol[i][0] === normalizedUrl) return i + 2;
+  }
+  return -1;
+}
+
+function findRowById(sheet, id) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return -1;
+  const idCol = sheet.getRange(2, COL.ID, lastRow - 1, 1).getValues();
+  for (let i = 0; i < idCol.length; i++) {
+    if (idCol[i][0] === id) return i + 2;
+  }
+  return -1;
+}
+
+function formatDate(d) {
+  return Utilities.formatDate(d, 'Asia/Tokyo', 'yyyy/MM/dd HH:mm');
+}
+
+function getStatusLabel(status) {
+  const map = { 'unread': '📖 未読', 'reading': '👁 読書中', 'done': '✅ 読了', 'archive': '📦 アーカイブ' };
+  return map[status] || '';
+}
+
+function getFlagLabel(flag) {
+  const map = { 'important': '⭐ 重要', 'favorite': '❤️ お気に入り' };
+  return map[flag] || '';
+}
+
+function getPagesSheet() { return SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.PAGES_SHEET_NAME); }
+function getTagsSheet() { return SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.TAGS_SHEET_NAME); }
+function getPrefixesSheet() { return SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.PREFIXES_SHEET_NAME); }
+
+function jsonResponse(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}`;
+    
+    // ============================================
+    // 初期表示：GASコード設置
+    // ============================================
+    function renderGasCode() {
+      const spreadsheetId = document.getElementById('configSpreadsheet').value.trim();
+      const folderId = document.getElementById('configFolder').value.trim();
+      const secret = document.getElementById('configSecret').value.trim();
+      
+      let code = GAS_CODE_TEMPLATE;
+      if (spreadsheetId) code = code.replace('YOUR_SPREADSHEET_ID_HERE', spreadsheetId);
+      if (folderId) code = code.replace('YOUR_FOLDER_ID_HERE', folderId);
+      if (secret) code = code.replace('YOUR_SECRET_HERE', secret);
+      
+      document.getElementById('gasCode').textContent = code;
+    }
+    
+    // 設定欄の入力に応じてリアルタイム更新
+    document.getElementById('configSpreadsheet').addEventListener('input', renderGasCode);
+    document.getElementById('configFolder').addEventListener('input', renderGasCode);
+    document.getElementById('configSecret').addEventListener('input', renderGasCode);
+    
+    // Step1のスプレッドシートID入力を Step4 にも自動コピー
+    document.getElementById('userSpreadsheetId').addEventListener('input', (e) => {
+      const v = e.target.value.trim();
+      if (v && !document.getElementById('configSpreadsheet').value) {
+        document.getElementById('configSpreadsheet').value = v;
+        renderGasCode();
+      }
+    });
+    
+    // Step2のフォルダIDを Step4 に自動コピー
+    document.getElementById('userFolderId').addEventListener('input', (e) => {
+      const v = e.target.value.trim();
+      if (v && !document.getElementById('configFolder').value) {
+        document.getElementById('configFolder').value = v;
+        renderGasCode();
+      }
+    });
+    
+    // Step5のGAS URLを Step6 に自動コピー
+    document.getElementById('userGasUrl').addEventListener('input', (e) => {
+      const v = e.target.value.trim();
+      if (v && !document.getElementById('bookmarkletGasUrl').value) {
+        document.getElementById('bookmarkletGasUrl').value = v;
+      }
+    });
+    
+    // Step4のシークレットを Step6 に自動コピー
+    document.getElementById('configSecret').addEventListener('input', (e) => {
+      const v = e.target.value.trim();
+      if (v && !document.getElementById('bookmarkletSecret').value) {
+        document.getElementById('bookmarkletSecret').value = v;
+      }
+    });
+    
+    // ============================================
+    // シークレット自動生成
+    // ============================================
+    function generateSecret() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let secret = 'pk-';
+      const arr = new Uint32Array(32);
+      crypto.getRandomValues(arr);
+      for (let i = 0; i < 32; i++) {
+        secret += chars[arr[i] % chars.length];
+      }
+      document.getElementById('configSecret').value = secret;
+      document.getElementById('bookmarkletSecret').value = secret;
+      renderGasCode();
+    }
+    
+    // ============================================
+    // コードコピー
+    // ============================================
+    function copyGasCode() {
+      const code = document.getElementById('gasCode').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copyGasBtn');
+        btn.textContent = '✓ コピーしました';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'コードをコピー';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+    
+    // ============================================
+    // ブックマークレット生成
+    // ============================================
+    function generateBookmarklet() {
+      const gasUrl = document.getElementById('bookmarkletGasUrl').value.trim();
+      const secret = document.getElementById('bookmarkletSecret').value.trim();
+      
+      if (!gasUrl || !secret) {
+        alert('ウェブアプリURLとシークレットの両方を入力してください');
+        return;
+      }
+      
+      if (!gasUrl.startsWith('https://script.google.com/macros/s/')) {
+        if (!confirm('ウェブアプリURLの形式が一般的でないようです。続行しますか?')) return;
+      }
+      
+      // クライアントコードのURL
+      const clientUrl = 'https://documentgit.github.io/PageKeep/app.js';
+      
+      const bookmarklet = `javascript:(async function(){window.__PAGEKEEP_GAS_URL__=${JSON.stringify(gasUrl)};window.__PAGEKEEP_SECRET__=${JSON.stringify(secret)};try{var r=await fetch(${JSON.stringify(clientUrl)}+'?t='+Date.now());var c=await r.text();if(window.trustedTypes&&window.trustedTypes.createPolicy){c=trustedTypes.createPolicy('pk'+Date.now(),{createScript:function(s){return s;}}).createScript(c);}(0,eval)(c);}catch(e){alert('PageKeep error: '+e.message);}})();`;
+      
+      document.getElementById('bookmarkletCode').textContent = bookmarklet;
+      document.getElementById('bookmarkletResult').style.display = 'block';
+    }
+    
+    function copyBookmarklet() {
+      const code = document.getElementById('bookmarkletCode').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copyBookmarkletBtn');
+        btn.textContent = '✓ コピーしました';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'コピー';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+    
+    // ============================================
+    // デバイスタブ
+    // ============================================
+    function detectDevice() {
+      const ua = navigator.userAgent;
+      if (/iPad/i.test(ua) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(ua))) {
+        return 'ipad';
+      }
+      if (/iPhone/i.test(ua)) return 'iphone';
+      return 'pc';
+    }
+    
+    function setDevice(device) {
+      document.querySelectorAll('.device-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.device === device);
+      });
+      document.querySelectorAll('.device-content').forEach(content => {
+        content.classList.toggle('active', content.dataset.device === device);
+      });
+      try { localStorage.setItem('pk_device', device); } catch (e) {}
+    }
+    
+    document.querySelectorAll('.device-tab').forEach(tab => {
+      tab.addEventListener('click', () => setDevice(tab.dataset.device));
+    });
+    
+    // 初期化
+    let savedDevice = null;
+    try { savedDevice = localStorage.getItem('pk_device'); } catch (e) {}
+    setDevice(savedDevice || detectDevice());
+    renderGasCode();
+  </script>
+</body>
+</html>
+</body>
+</html>
