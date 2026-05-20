@@ -920,7 +920,7 @@
         flags: flagsChecked,
       });
       
-      if (result.success) {
+     if (result.success) {
         if (fromListView) {
           await reloadAndShowList(overlay);
         } else {
@@ -931,7 +931,27 @@
               ${docUrl ? `<p><a href="${escapeAttr(docUrl)}" target="_blank">📄 Docを開く</a></p>` : ''}
             </div>
           `);
-          setTimeout(() => overlay.remove(), 2000);
+          
+          // 自動クローズタイマー
+          const closeTimer = setTimeout(() => overlay.remove(), 2000);
+          
+          // ヘッダーの「一覧」ボタンを押されたらタイマーキャンセルして一覧へ
+          const showListBtn = overlay.querySelector('#pk-show-list');
+          if (showListBtn) {
+            showListBtn.onclick = async () => {
+              clearTimeout(closeTimer);
+              await reloadAndShowList(overlay);
+            };
+          }
+          
+          // 「×」もタイマーキャンセル（押した瞬間に閉じる、ダブル発火防止）
+          const closeBtn = overlay.querySelector('.pk-close');
+          if (closeBtn) {
+            closeBtn.onclick = () => {
+              clearTimeout(closeTimer);
+              overlay.remove();
+            };
+          }
         }
       } else {
         const banner = body.querySelector('.pk-status-banner');
