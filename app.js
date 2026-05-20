@@ -1,12 +1,13 @@
 // ============================================
-// PageKeep - Client Script (v2.1)
+// PageKeep - Client Script (v3)
+// 更新モード対応版
 // ============================================
 (async function() {
   'use strict';
   
-  const REQUIRED_GAS_VERSION = 2;
+  const REQUIRED_GAS_VERSION = 3;
   
-  // Trusted Types 対応
+  // Trusted Types
   let trustedHTMLPolicy = null;
   if (window.trustedTypes && window.trustedTypes.createPolicy) {
     try {
@@ -36,7 +37,7 @@
   if (existingOverlay) existingOverlay.remove();
   
   // ============================================
-  // ステータス・フラグ定義
+  // 定数
   // ============================================
   const STATUSES = [
     { value: 'unread',   label: '📖 未読' },
@@ -69,6 +70,7 @@
       u.pathname = u.pathname.slice(0, -1);
     }
     
+    // YouTube正規化
     if (/(?:^|\.)youtube\.com$|^youtu\.be$/.test(u.hostname)) {
       let videoId = null;
       if (u.hostname === 'youtu.be') {
@@ -134,7 +136,17 @@
   }
   
   // ============================================
-  // UI構築
+  // エスケープ
+  // ============================================
+  function escapeAttr(s) {
+    return String(s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function escapeText(s) {
+    return String(s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  
+  // ============================================
+  // オーバーレイ作成
   // ============================================
   function buildOverlay() {
     const overlay = document.createElement('div');
@@ -195,6 +207,9 @@
         }
         #__pagekeep_overlay__ .pk-status-banner.error {
           background: #f8d7da; color: #721c24;
+        }
+        #__pagekeep_overlay__ .pk-status-banner a {
+          color: inherit; text-decoration: underline;
         }
         #__pagekeep_overlay__ .pk-tag-input-row {
           display: flex; gap: 6px;
@@ -290,6 +305,9 @@
         #__pagekeep_overlay__ button.pk-btn-primary:disabled {
           opacity: 0.5; cursor: not-allowed;
         }
+        #__pagekeep_overlay__ button.pk-btn-update {
+          background: #ff8c00; color: #fff; border: none;
+        }
         #__pagekeep_overlay__ .pk-success {
           text-align: center; padding: 24px 12px;
         }
@@ -335,39 +353,40 @@
     return overlay;
   }
   
-  function escapeAttr(s) {
-    return String(s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-  function escapeText(s) {
-    return String(s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-  
+  // ============================================
+  // フォーム描画
+  // ============================================
   function renderForm(overlay, pageData, existing, prefixes, allTags) {
     const body = overlay.querySelector('.pk-body');
+    const isUpdate = existing.exists;
     
-    const statusBanner = existing.exists
-      ? `<div class="pk-status-banner existing">⚠ 既に保存済み（${(existing.updateCount || 0) + 1}回目）</div>`
+    const statusBanner = isUpdate
+      ? `<div class="pk-status-banner existing">
+           ⚠ 既に保存済み（${existing.updateCount || 0}回更新済み）
+           ${existing.docUrl ? `<br><a href="${escapeAttr(existing.docUrl)}" target="_blank">📄 既存のDocを開く</a>` : ''}
+         </div>`
       : `<div class="pk-status-banner new">✓ 新規ページとして保存します</div>`;
     
     const initialStatus = existing.status || '';
     const initialFlags = existing.flags || [];
     const initialTags = existing.tags || [];
+    const initialNote = isUpdate ? (existing.note || '') : '';
     
-    // プレフィックスのドロップダウン
     const prefixOptions = prefixes.map(p => 
       `<option value="${escapeAttr(p.name)}">${escapeAttr(p.name)} (${p.count})</option>`
     ).join('');
     
-    // 最近使ったタグ（上位8件）
     const recentTags = [...allTags]
       .filter(t => t.lastUsed)
       .sort((a, b) => new Date(b.lastUsed) - new Date(a.lastUsed))
       .slice(0, 8);
     
-    // よく使うタグ（上位12件）
     const popularTags = [...allTags]
       .sort((a, b) => b.count - a.count)
       .slice(0, 12);
+    
+    const submitLabel = isUpdate ? '更新' : '保存';
+    const submitClass = isUpdate ? 'pk-btn-update' : 'pk-btn-primary';
     
     setHTML(body, `
       ${statusBanner}
@@ -376,7 +395,7 @@
       <input type="text" id="pk-title" value="${escapeAttr(pageData.title)}">
       
       <label class="required">ステータス</label>
-      <div class="pk-radio-group" id="pk-status-group">
+      <div class="pk-radio-group">
         ${STATUSES.map(s => `
           <label class="pk-radio-label ${initialStatus === s.value ? 'checked' : ''}">
             <input type="radio" name="pk-status" value="${s.value}" ${initialStatus === s.value ? 'checked' : ''}>
@@ -386,7 +405,7 @@
       </div>
       
       <label>フラグ</label>
-      <div class="pk-checkbox-group" id="pk-flags-group">
+      <div class="pk-checkbox-group">
         ${FLAGS.map(f => `
           <label class="pk-checkbox-label ${initialFlags.includes(f.value) ? 'checked' : ''}">
             <input type="checkbox" name="pk-flag" value="${f.value}" ${initialFlags.includes(f.value) ? 'checked' : ''}>
@@ -408,30 +427,21 @@
       
       <div class="pk-selected-tags" id="pk-selected"></div>
       
-      <div class="pk-tag-area" id="pk-tag-suggestions">
-        ${recentTags.length > 0 ? `
-          <div class="pk-tag-group-title">最近使った</div>
-          <div>${recentTags.map(t => `<span class="pk-tag-chip" data-tag="${escapeAttr(t.name)}">${escapeAttr(t.name)}</span>`).join('')}</div>
-        ` : ''}
-        ${popularTags.length > 0 ? `
-          <div class="pk-tag-group-title">よく使う</div>
-          <div>${popularTags.map(t => `<span class="pk-tag-chip" data-tag="${escapeAttr(t.name)}">${escapeAttr(t.name)} (${t.count})</span>`).join('')}</div>
-        ` : ''}
-      </div>
+      <div class="pk-tag-area" id="pk-tag-suggestions"></div>
       
       <label>抜粋</label>
       <textarea id="pk-excerpt">${escapeText(pageData.excerpt)}</textarea>
       
       <label>メモ</label>
-      <textarea id="pk-note" placeholder="一言コメント"></textarea>
+      <textarea id="pk-note" placeholder="一言コメント">${escapeText(initialNote)}</textarea>
       
       <div class="pk-actions">
         <button class="pk-btn pk-cancel">キャンセル</button>
-        <button class="pk-btn pk-btn-primary pk-submit">保存</button>
+        <button class="pk-btn ${submitClass} pk-submit">${submitLabel}</button>
       </div>
     `);
     
-    // 選択中タグの管理
+    // 選択中タグ管理
     let selectedTags = [...initialTags];
     
     function renderSelected() {
@@ -441,8 +451,7 @@
       ).join(''));
       el.querySelectorAll('.pk-tag-chip').forEach(chip => {
         chip.onclick = () => {
-          const idx = parseInt(chip.dataset.idx);
-          selectedTags.splice(idx, 1);
+          selectedTags.splice(parseInt(chip.dataset.idx), 1);
           renderSelected();
           updateSuggestionHighlights();
         };
@@ -455,13 +464,11 @@
       });
     }
     
-    // タグ追加処理
     function addTag(fullTag) {
       const trimmed = fullTag.trim();
       if (!trimmed) return false;
       if (selectedTags.includes(trimmed)) return false;
       
-      // 表記ゆれチェック
       const similar = findSimilarTags(trimmed, allTags.map(t => t.name));
       if (similar.length > 0) {
         const warningEl = body.querySelector('#pk-tag-warning');
@@ -497,41 +504,7 @@
       return true;
     }
     
-    // タグ追加ボタン
-    body.querySelector('#pk-tag-add').onclick = (e) => {
-      e.preventDefault();
-      const prefix = body.querySelector('#pk-prefix').value;
-      const name = body.querySelector('#pk-tag-name').value.trim();
-      if (!name) return;
-      const fullTag = prefix ? `${prefix}/${name}` : name;
-      if (addTag(fullTag)) {
-        body.querySelector('#pk-tag-name').value = '';
-        body.querySelector('#pk-tag-warning').style.display = 'none';
-      }
-    };
-    
-    // Enter キーでも追加
-    body.querySelector('#pk-tag-name').onkeydown = (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        body.querySelector('#pk-tag-add').click();
-      }
-    };
-    
-    // タグサジェスト：インクリメンタル検索
-    body.querySelector('#pk-tag-name').oninput = (e) => {
-      const q = e.target.value.toLowerCase().normalize('NFKC');
-      if (!q) {
-        // 元の表示に戻す
-        renderTagSuggestions(recentTags, popularTags);
-        return;
-      }
-      const filtered = allTags.filter(t => 
-        t.name.toLowerCase().normalize('NFKC').includes(q)
-      ).slice(0, 20);
-      renderFilteredSuggestions(filtered);
-    };
-    
+    // タグサジェスト描画
     function renderTagSuggestions(recent, popular) {
       const el = body.querySelector('#pk-tag-suggestions');
       setHTML(el, `
@@ -577,11 +550,38 @@
       });
     }
     
-    attachSuggestionClicks();
-    renderSelected();
-    updateSuggestionHighlights();
+    // イベント登録
+    body.querySelector('#pk-tag-add').onclick = (e) => {
+      e.preventDefault();
+      const prefix = body.querySelector('#pk-prefix').value;
+      const name = body.querySelector('#pk-tag-name').value.trim();
+      if (!name) return;
+      const fullTag = prefix ? `${prefix}/${name}` : name;
+      if (addTag(fullTag)) {
+        body.querySelector('#pk-tag-name').value = '';
+        body.querySelector('#pk-tag-warning').style.display = 'none';
+      }
+    };
     
-    // ラジオ・チェックボックスの見た目更新
+    body.querySelector('#pk-tag-name').onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        body.querySelector('#pk-tag-add').click();
+      }
+    };
+    
+    body.querySelector('#pk-tag-name').oninput = (e) => {
+      const q = e.target.value.toLowerCase().normalize('NFKC');
+      if (!q) {
+        renderTagSuggestions(recentTags, popularTags);
+        return;
+      }
+      const filtered = allTags.filter(t => 
+        t.name.toLowerCase().normalize('NFKC').includes(q)
+      ).slice(0, 20);
+      renderFilteredSuggestions(filtered);
+    };
+    
     body.querySelectorAll('input[name="pk-status"]').forEach(input => {
       input.onchange = () => {
         body.querySelectorAll('.pk-radio-label').forEach(l => l.classList.remove('checked'));
@@ -594,10 +594,9 @@
       };
     });
     
-    // キャンセル
     body.querySelector('.pk-cancel').onclick = () => overlay.remove();
     
-    // 保存
+    // 保存/更新ボタン
     body.querySelector('.pk-submit').onclick = async () => {
       const statusInput = body.querySelector('input[name="pk-status"]:checked');
       if (!statusInput) {
@@ -605,14 +604,12 @@
         return;
       }
       
-      // 入力欄に残っているタグを自動追加
+      // 入力欄に残ったタグを自動追加
       const tagNameInput = body.querySelector('#pk-tag-name');
       const pendingTagName = tagNameInput.value.trim();
       if (pendingTagName) {
         const prefix = body.querySelector('#pk-prefix').value;
         const fullTag = prefix ? `${prefix}/${pendingTagName}` : pendingTagName;
-        
-        // 表記ゆれチェック（既存タグと同じ正規化形なら、既存タグを使う）
         const similar = findSimilarTags(fullTag, allTags.map(t => t.name));
         if (similar.length > 0) {
           if (!selectedTags.includes(similar[0])) {
@@ -626,11 +623,12 @@
       
       const btn = body.querySelector('.pk-submit');
       btn.disabled = true;
-      btn.textContent = '保存中...';
+      btn.textContent = isUpdate ? '更新中...' : '保存中...';
       
       const flagsChecked = Array.from(body.querySelectorAll('input[name="pk-flag"]:checked')).map(c => c.value);
       
-      const result = await callGas('save', {
+      const action = isUpdate ? 'update' : 'save';
+      const result = await callGas(action, {
         url: pageData.url,
         normalizedUrl: pageData.normalizedUrl,
         title: body.querySelector('#pk-title').value,
@@ -642,34 +640,30 @@
       });
       
       if (result.success) {
+        const docUrl = result.docUrl || existing.docUrl;
         setHTML(body, `
           <div class="pk-success">
-            <p>✅ 保存しました</p>
-            <p><a href="${result.docUrl}" target="_blank">📄 Docを開く</a></p>
+            <p>${isUpdate ? '✅ 更新しました' : '✅ 保存しました'}</p>
+            ${docUrl ? `<p><a href="${escapeAttr(docUrl)}" target="_blank">📄 Docを開く</a></p>` : ''}
           </div>
         `);
         setTimeout(() => overlay.remove(), 2000);
-      } else if (result.duplicate) {
-        const banner = body.querySelector('.pk-status-banner');
-        banner.className = 'pk-status-banner existing';
-        setHTML(banner, 
-          `⚠ このページは既に保存されています。<br>` +
-          (existing.docUrl ? `<a href="${existing.docUrl}" target="_blank" style="color:#0066cc;">📄 保存済みのDocを開く</a>` : '')
-        );
-        btn.disabled = true;
-        btn.textContent = '保存済み';
       } else {
         const banner = body.querySelector('.pk-status-banner');
         banner.className = 'pk-status-banner error';
         banner.textContent = '❌ エラー: ' + (result.error || 'unknown');
         btn.disabled = false;
-        btn.textContent = '保存';
+        btn.textContent = submitLabel;
       }
     };
+    
+    // 初期描画
+    renderTagSuggestions(recentTags, popularTags);
+    renderSelected();
   }
   
   // ============================================
-  // メイン処理
+  // メイン
   // ============================================
   const overlay = buildOverlay();
   const pageData = collectPageData();
@@ -686,7 +680,6 @@
       return;
     }
     
-    // 並列に取得
     const [existing, prefixesRes, tagsRes] = await Promise.all([
       callGas('check', {
         url: pageData.url,
