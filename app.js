@@ -114,10 +114,7 @@
   function collectPageData() {
     const url = location.href;
     const normalizedUrl = normalizeUrl(url);
-    const title = (
-      document.querySelector('meta[property="og:title"]')?.content ||
-      document.title || ''
-    ).trim();
+    const title = collectTitle();
     let excerpt = window.getSelection().toString().trim();
     if (!excerpt) {
       excerpt = (
@@ -126,6 +123,51 @@
       ).trim();
     }
     return { url, normalizedUrl, title, excerpt };
+  }
+  
+  function collectTitle() {
+    const isYouTube = /(?:^|\.)youtube\.com$|^youtu\.be$/.test(location.hostname);
+    
+    // YouTube専用：DOM から動画タイトルを取得
+    if (isYouTube) {
+      const ytTitle = pickYouTubeTitle();
+      if (ytTitle) return ytTitle;
+    }
+    
+    // 通常：og:title → document.title
+    const ogTitle = document.querySelector('meta[property="og:title"]')?.content?.trim();
+    if (ogTitle && ogTitle !== 'YouTube') return ogTitle;
+    
+    const docTitle = (document.title || '').trim();
+    // 「タイトル - YouTube」形式から動画タイトル部分を抽出
+    if (docTitle && docTitle !== 'YouTube') {
+      return docTitle.replace(/\s*-\s*YouTube\s*$/, '');
+    }
+    
+    return docTitle;
+  }
+  
+  function pickYouTubeTitle() {
+    // 複数のセレクタで試す（YouTubeのUI変更に対応）
+    const selectors = [
+      'ytd-watch-metadata h1 yt-formatted-string',
+      'ytd-watch-metadata h1',
+      'h1.ytd-watch-metadata',
+      'h1.title',
+      '#title h1',
+      '#container h1.title',
+      'h1.ytd-video-primary-info-renderer',
+    ];
+    
+    for (const sel of selectors) {
+      const el = document.querySelector(sel);
+      if (el) {
+        const text = (el.textContent || '').trim();
+        if (text && text !== 'YouTube') return text;
+      }
+    }
+    
+    return null;
   }
   
   async function callGas(action, payload) {
