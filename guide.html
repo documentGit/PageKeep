@@ -159,6 +159,10 @@
     }
     .input-with-btn input { flex: 1; }
     
+    .privacy-note {
+      font-size: 12px; color: #666; margin: 6px 0 0;
+    }
+    
     .btn {
       padding: 8px 16px;
       background: #0066cc;
@@ -194,6 +198,8 @@
       background: #e8f5e9;
       border-left: 4px solid #4caf50;
     }
+    .alert ul { margin: 8px 0 0; padding-left: 24px; }
+    .alert li { margin: 4px 0; }
     
     .device-content { display: none; }
     .device-content.active { display: block; }
@@ -238,6 +244,7 @@
       .alert-info { background: #1a3a5f; }
       .alert-tip { background: #1a3a2a; }
       .device-tabs { border-color: #444; }
+      .privacy-note { color: #999; }
     }
   </style>
 </head>
@@ -264,6 +271,20 @@
     
     <div class="alert alert-info">
       <strong>所要時間</strong>：約15〜20分。コピペが中心で、プログラミング知識は不要です。
+    </div>
+    
+    <div class="alert alert-tip">
+      <strong>🔒 プライバシーについて</strong>
+      <p style="margin:8px 0 0;">
+        このページに入力するスプレッドシートID、フォルダID、シークレット、ウェブアプリURLは、<strong>あなたのブラウザ内だけで処理されます</strong>。
+      </p>
+      <ul>
+        <li>どこのサーバーにも送信されません</li>
+        <li>このページの作成者からも見えません</li>
+        <li>ページを閉じると入力内容は消えます（保存もされません）</li>
+        <li>あなたのデータ（保存したWebページ）は、<strong>すべてあなた自身のGoogleアカウント内</strong>（Googleスプレッドシート + Googleドライブ）に保存されます</li>
+        <li>あなた以外は、たとえ管理者でも、あなたの保存データを見ることはできません</li>
+      </ul>
     </div>
     
     <div class="toc">
@@ -320,6 +341,7 @@ https://docs.google.com/spreadsheets/d/<strong style="color:#0066cc;">XXXXXXXXXX
       <div class="input-group">
         <label>あなたのスプレッドシートID（後で使うので、ここにメモしておきましょう）</label>
         <input type="text" id="userSpreadsheetId" placeholder="貼り付け">
+        <p class="privacy-note">🔒 この入力欄はブラウザ内だけで使われ、どこにも送信されません。</p>
       </div>
       
       <div class="alert alert-warn">
@@ -351,6 +373,7 @@ https://drive.google.com/drive/folders/<strong style="color:#0066cc;">XXXXXXXXXX
       <div class="input-group">
         <label>あなたのフォルダID（後で使うのでメモ）</label>
         <input type="text" id="userFolderId" placeholder="貼り付け">
+        <p class="privacy-note">🔒 この入力欄はブラウザ内だけで使われ、どこにも送信されません。</p>
       </div>
     </div>
     
@@ -407,10 +430,18 @@ https://drive.google.com/drive/folders/<strong style="color:#0066cc;">XXXXXXXXXX
           <input type="text" id="configSecret" placeholder="ランダム生成ボタンを押すか、好きな文字列を入れる">
           <button class="btn" onclick="generateSecret()">🎲 ランダム生成</button>
         </div>
+        <p class="privacy-note">🔒 「🎲 ランダム生成」はあなたのブラウザ内だけで実行されます。生成された値も、入力した値も、どこにも送信されません。</p>
       </div>
       
       <div class="alert alert-warn">
-        <strong>⚠ シークレットの取り扱い</strong>：シークレットは「あなたのGAS」と「あなたのブックマークレット」だけが知る合言葉です。他人に教えないでください。後で Step 6 で同じ値を使います。
+        <strong>⚠ シークレットの取り扱い</strong>
+        <ul>
+          <li>シークレットは「あなたのGAS」と「あなたのブックマークレット」だけが知る合言葉です</li>
+          <li>これはあなた以外がGASを呼び出せないようにするためのパスワードのような役割をします</li>
+          <li>他人に教えないでください</li>
+          <li>後で Step 6 で同じ値を使います</li>
+          <li>このページに入力しても、シークレットはブラウザ内だけで処理され、どこにも送信されません</li>
+        </ul>
       </div>
       
       <p>上記3つを入力すると、上のコードが自動で書き換わります。書き換わったコードをコピーして、エディタに貼り付けてください。</p>
@@ -458,6 +489,7 @@ https://drive.google.com/drive/folders/<strong style="color:#0066cc;">XXXXXXXXXX
       <div class="input-group">
         <label>あなたのウェブアプリURL（後で使うのでメモ）</label>
         <input type="text" id="userGasUrl" placeholder="https://script.google.com/macros/s/.../exec">
+        <p class="privacy-note">🔒 この入力欄はブラウザ内だけで使われ、どこにも送信されません。</p>
       </div>
       
       <h4>動作確認</h4>
@@ -473,6 +505,16 @@ https://drive.google.com/drive/folders/<strong style="color:#0066cc;">XXXXXXXXXX
       </div>
       
       <p>ブラウザに登録する「ブックマークレット」を生成します。これがPageKeepの起動ボタンになります。</p>
+      
+      <div class="alert alert-tip">
+        <strong>🔒 生成処理について</strong>
+        <ul>
+          <li>下の2項目はあなたのブラウザ内だけで使われ、どこにも送信されません</li>
+          <li>生成されたブックマークレットは、あなたのブラウザに保存されます</li>
+          <li>クリックすると、あなたが作ったあなた専用のGAS（あなたのGoogleアカウント内）と通信します</li>
+          <li>保存したWebページの情報は、すべてあなたのGoogleスプレッドシートとGoogleドライブに保存されます</li>
+        </ul>
+      </div>
       
       <div class="input-group">
         <label>ウェブアプリURL（Step 5で取得）</label>
@@ -556,6 +598,18 @@ https://drive.google.com/drive/folders/<strong style="color:#0066cc;">XXXXXXXXXX
           <strong>💡 使い方</strong>：保存したいページを開いた状態で、アドレスバーをタップ → ブックマークタブ → 「📌 PageKeep」をタップ！
         </div>
       </div>
+    </div>
+    
+    <div class="alert alert-tip">
+      <strong>🔒 これで完成です</strong>
+      <p style="margin:8px 0 0;">
+        セットアップ完了後、PageKeep は完全にあなた専用のツールとして動作します。
+      </p>
+      <ul>
+        <li>保存したページの情報は、あなたのGoogleアカウント内（スプレッドシート + ドライブ）にのみ保存されます</li>
+        <li>このサイトの管理者、ツール作成者、Googleの管理者を含め、誰もあなたのデータを見ることはできません</li>
+        <li>ブックマークレットを実行した時の通信先は、あなた自身がデプロイしたGASだけです</li>
+      </ul>
     </div>
     
     <!-- ============= 使い方 ============= -->
@@ -987,9 +1041,6 @@ function jsonResponse(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }`;
     
-    // ============================================
-    // 初期表示：GASコード設置
-    // ============================================
     function renderGasCode() {
       const spreadsheetId = document.getElementById('configSpreadsheet').value.trim();
       const folderId = document.getElementById('configFolder').value.trim();
@@ -1003,12 +1054,10 @@ function jsonResponse(obj) {
       document.getElementById('gasCode').textContent = code;
     }
     
-    // 設定欄の入力に応じてリアルタイム更新
     document.getElementById('configSpreadsheet').addEventListener('input', renderGasCode);
     document.getElementById('configFolder').addEventListener('input', renderGasCode);
     document.getElementById('configSecret').addEventListener('input', renderGasCode);
     
-    // Step1のスプレッドシートID入力を Step4 にも自動コピー
     document.getElementById('userSpreadsheetId').addEventListener('input', (e) => {
       const v = e.target.value.trim();
       if (v && !document.getElementById('configSpreadsheet').value) {
@@ -1017,7 +1066,6 @@ function jsonResponse(obj) {
       }
     });
     
-    // Step2のフォルダIDを Step4 に自動コピー
     document.getElementById('userFolderId').addEventListener('input', (e) => {
       const v = e.target.value.trim();
       if (v && !document.getElementById('configFolder').value) {
@@ -1026,7 +1074,6 @@ function jsonResponse(obj) {
       }
     });
     
-    // Step5のGAS URLを Step6 に自動コピー
     document.getElementById('userGasUrl').addEventListener('input', (e) => {
       const v = e.target.value.trim();
       if (v && !document.getElementById('bookmarkletGasUrl').value) {
@@ -1034,7 +1081,6 @@ function jsonResponse(obj) {
       }
     });
     
-    // Step4のシークレットを Step6 に自動コピー
     document.getElementById('configSecret').addEventListener('input', (e) => {
       const v = e.target.value.trim();
       if (v && !document.getElementById('bookmarkletSecret').value) {
@@ -1042,9 +1088,6 @@ function jsonResponse(obj) {
       }
     });
     
-    // ============================================
-    // シークレット自動生成
-    // ============================================
     function generateSecret() {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       let secret = 'pk-';
@@ -1058,9 +1101,6 @@ function jsonResponse(obj) {
       renderGasCode();
     }
     
-    // ============================================
-    // コードコピー
-    // ============================================
     function copyGasCode() {
       const code = document.getElementById('gasCode').textContent;
       navigator.clipboard.writeText(code).then(() => {
@@ -1074,9 +1114,6 @@ function jsonResponse(obj) {
       });
     }
     
-    // ============================================
-    // ブックマークレット生成
-    // ============================================
     function generateBookmarklet() {
       const gasUrl = document.getElementById('bookmarkletGasUrl').value.trim();
       const secret = document.getElementById('bookmarkletSecret').value.trim();
@@ -1090,7 +1127,6 @@ function jsonResponse(obj) {
         if (!confirm('ウェブアプリURLの形式が一般的でないようです。続行しますか?')) return;
       }
       
-      // クライアントコードのURL
       const clientUrl = 'https://documentgit.github.io/PageKeep/app.js';
       
       const bookmarklet = `javascript:(async function(){window.__PAGEKEEP_GAS_URL__=${JSON.stringify(gasUrl)};window.__PAGEKEEP_SECRET__=${JSON.stringify(secret)};try{var r=await fetch(${JSON.stringify(clientUrl)}+'?t='+Date.now());var c=await r.text();if(window.trustedTypes&&window.trustedTypes.createPolicy){c=trustedTypes.createPolicy('pk'+Date.now(),{createScript:function(s){return s;}}).createScript(c);}(0,eval)(c);}catch(e){alert('PageKeep error: '+e.message);}})();`;
@@ -1112,9 +1148,6 @@ function jsonResponse(obj) {
       });
     }
     
-    // ============================================
-    // デバイスタブ
-    // ============================================
     function detectDevice() {
       const ua = navigator.userAgent;
       if (/iPad/i.test(ua) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(ua))) {
@@ -1138,13 +1171,10 @@ function jsonResponse(obj) {
       tab.addEventListener('click', () => setDevice(tab.dataset.device));
     });
     
-    // 初期化
     let savedDevice = null;
     try { savedDevice = localStorage.getItem('pk_device'); } catch (e) {}
     setDevice(savedDevice || detectDevice());
     renderGasCode();
   </script>
-</body>
-</html>
 </body>
 </html>
