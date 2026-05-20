@@ -5,7 +5,7 @@
 (async function() {
   'use strict';
   
-  const REQUIRED_GAS_VERSION = 4;
+  const REQUIRED_GAS_VERSION = 5;
   
   // Trusted Types
   let trustedHTMLPolicy = null;
@@ -1026,8 +1026,9 @@
       
       <div class="pk-filter-row">
         <select id="pk-filter-status">
-          <option value="">ステータス: 全て</option>
+          <option value="not-archive">アーカイブ除く</option>
           ${STATUSES.map(s => `<option value="${s.value}">${s.label}</option>`).join('')}
+          <option value="">すべて（アーカイブも含む）</option>
         </select>
         <select id="pk-filter-flag">
           <option value="">フラグ: 全て</option>
@@ -1054,10 +1055,10 @@
       <div class="pk-card-list" id="pk-cards"></div>
     `);
     
-    // フィルタ状態
+   // フィルタ状態
     const filter = {
       keyword: '',
-      status: '',
+      status: 'not-archive',  // デフォルトでアーカイブ除外
       flag: '',
       prefix: '',
       tags: [],
@@ -1223,11 +1224,15 @@
   // ============================================
   // フィルタロジック
   // ============================================
-  function applyFilter(pages, filter) {
+ function applyFilter(pages, filter) {
     const kw = filter.keyword ? normalizeForCompare(filter.keyword) : '';
     
     return pages.filter(p => {
-      if (filter.status && p.status !== filter.status) return false;
+      if (filter.status === 'not-archive') {
+        if (p.status === 'archive') return false;
+      } else if (filter.status && p.status !== filter.status) {
+        return false;
+      }
       if (filter.flag && !(p.flags || []).includes(filter.flag)) return false;
       if (filter.prefix) {
         const hasPrefix = (p.tags || []).some(t => t.startsWith(filter.prefix + '/'));
